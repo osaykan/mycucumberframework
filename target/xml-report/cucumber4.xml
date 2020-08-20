@@ -1,0 +1,51 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<testsuite errors="0" failures="1" name="io.cucumber.core.plugin.JUnitFormatter" skipped="0" tests="6" time="308.931">
+<testcase classname="Single Data Table" name="TC01_ google search test" time="112.042">
+<system-out><![CDATA[Given user is in the google page............................................passed
+And user searches "Selenium"................................................passed
+Then verify result has "Selenium"...........................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Single Data Table" name="TC01_ google search test 2" time="66.677">
+<system-out><![CDATA[Given user is in the google page............................................passed
+And user searches "Cucumber"................................................passed
+Then verify result has "Cucumber"...........................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Single Data Table" name="TC01_ google search test 3" time="30.109">
+<system-out><![CDATA[Given user is in the google page............................................passed
+And user searches "Automation Tester".......................................passed
+Then verify result has "Automation Tester"..................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Single Data Table" name="TC01_ google search test 4" time="26.837">
+<system-out><![CDATA[Given user is in the google page............................................passed
+And user searches "Istanbul"................................................passed
+Then verify result has "Istanbul"...........................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Login feature" name="TC01_user logins with valid credentials" time="38.373">
+<system-out><![CDATA[Given user is on the fhctriplogin page......................................passed
+And user enters valid username..............................................passed
+And user enters  valid password.............................................passed
+And user clicks login button................................................passed
+Then verify login is successfull............................................passed
+]]></system-out>
+</testcase>
+<testcase classname="Login feature" name="TC01_user logins with invalid credentials" time="26.44">
+<failure message="" type="java.lang.AssertionError"><![CDATA[Given user is on the fhctriplogin page......................................passed
+And user enters invalid username............................................passed
+And user enters  invalid password...........................................passed
+And user clicks login button................................................passed
+Then verify login is successfull............................................failed
+
+StackTrace:
+java.lang.AssertionError
+	at org.junit.Assert.fail(Assert.java:87)
+	at org.junit.Assert.assertTrue(Assert.java:42)
+	at org.junit.Assert.assertTrue(Assert.java:53)
+	at stepdefinitions.FhcTripLoginStepDefinitions.verify_login_is_successfull(FhcTripLoginStepDefinitions.java:43)
+	at ✽.verify login is successfull(file:///C:/Users/Mz/IdeaProjects/mycucumberframework/src/test/resources/features/fhctrip_login.feature:17)
+]]></failure>
+</testcase>
+</testsuite>
