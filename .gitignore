@@ -1,0 +1,18 @@
+# Default ignored files
+target/
+.mvn
+.idea/*
+configuration.properties
+.classpath
+.vscode/
+.classpath
+.project
+.metadata
+.settings/
+bin/
+.Demo.java
+.demo.feature
+**/default-configs.properties
+**/overrides.properties
+.*
+Downloads/
