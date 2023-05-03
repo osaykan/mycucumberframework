@@ -1,0 +1,60 @@
+package pages.desktop;
+
+
+
+import com.gigya.socialize.GSRequest;
+import com.gigya.socialize.GSResponse;
+import org.junit.Assert;
+import utilities.ConfigurationReader;
+
+public class CDC {
+
+    public void cdc_validierung(String email){
+        final String apiKey;
+        //Define the API-Key and Secret key (the keys can be obtained from your site setup page on Gigya's website).
+        if (ConfigurationReader.getProperty("_SHOP_URL").contains("//www-c-s12.prrod.n-cms.com/")){
+             apiKey="3_AYEXMFLWkBKGx6yZyneiR6cdKn3cp5UWNvN3z3";    //sso.parent.ord.de.eu.sting von CDC
+
+          
+        }else{
+             apiKey = "3_AYBKGxRneiR6Kn3cp5d7hBs8UrvN3z3";    //sso.parent.rd.de.eu.staging von CDC
+           
+
+        }
+
+              final String secretKey = "YBeS8ZUOLg3kljhuznklBpVFCSdYS";                   //von Ticket
+        final String userKey = "ABkjlihrJ4tJN";                                       //von Ticket
+
+
+        // String apiMethod = "accounts.getAccountInfo";
+        String apiMethod = "accounts.search";
+
+        GSRequest request=new GSRequest(apiKey, secretKey, null, apiMethod, null, true, userKey);
+        // request.setParam("UID", "1e61e2be-16d9-4046-8eee-64130bcd6796");
+        request.setParam("query","SELECT * FROM accounts WHERE profile.email = '"+email+"'");
+
+        request.setAPIDomain("eu1.gigya.com");
+        GSResponse response = request.send();
+
+        if (response.getErrorCode() == 0) {
+            System.out.println("success!");
+            //System.out.println("Ergebnis :"+response.getData());
+            String str=response.getData().toString();
+            Assert.assertTrue(str.contains(email));
+
+        } else {
+           // System.out.println("---------------");
+            //System.out.println("Uh-oh, we got the following error: " + response.getLog());
+          //  System.out.println("------------------");
+            String str=response.getData().toString();
+            Assert.assertTrue(str.contains(email));
+        }
+
+
+    }
+
+
+
+
+
+}
