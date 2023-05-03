@@ -1,0 +1,42 @@
+package stepdefinitions.desktop;
+
+import io.cucumber.java.After;
+import io.cucumber.java.Before;
+import io.cucumber.java.Scenario;
+import org.openqa.selenium.OutputType;
+import org.openqa.selenium.TakesScreenshot;
+import utilities.ConfigurationReader;
+import utilities.desktop.Driver;
+
+public class Hooks {
+
+    @Before
+    public void setUp() {
+        String raute = String.format("%-50s", "#").replace(' ', '#');
+        System.out.println(raute);
+        System.out.println(raute);
+        System.out.println("Hooks Class regressiontests- Setup Method");
+        System.out.println("Browser: " + ConfigurationReader.getProperty("cucumber.browser"));
+        System.out.println("Shop URL: " + ConfigurationReader.getProperty("C_SHOP_URL"));
+        System.out.println(raute);
+        System.out.println(raute);
+    }
+
+    @After
+    public void tearDown(Scenario scenario) {
+        System.out.println("Hooks Class - tearDown Method");
+
+        // screenshot
+        final byte[] screenshot = ((TakesScreenshot) Driver.getDriver()).getScreenshotAs(OutputType.BYTES);
+
+        if (scenario.isFailed()) {
+            scenario.attach(screenshot, "image/png", "screenshots");
+        }
+
+        //  Driver.closeDriver();
+
+    }
+
+}
+
+
