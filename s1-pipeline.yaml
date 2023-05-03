@@ -1,0 +1,71 @@
+trigger: none
+
+parameters:
+  - name: browser_threads
+    displayName: Browser thread count
+    type: string
+    default: 4
+    values:
+      - 1
+      - 4
+  - name: browser_profiles
+    type: object
+    default:
+      - profile: S1-chrome-smoke1-headless
+        jobName: S1chromeSmoke1Headless
+        ignoreTestFailure: false
+        cucumberReportName: sk1
+      - profile: S1-chrome-smoke2-headless
+        jobName: S1chromeSmoke2Headless
+        ignoreTestFailure: false
+        cucumberReportName: sk2
+      - profile: S1-chrome-smoke3-headless
+        jobName: S1chromeSmoke3Headless
+        ignoreTestFailure: false
+        cucumberReportName: sk3
+      - profile: S1-chrome-regression-frontend-headless
+        jobName: S1chromeRegressionFrontendHeadless
+        ignoreTestFailure: false
+        cucumberReportName: rg-fe
+      - profile: S1-chrome-regression-backend1-headless
+        jobName: S1chromeRegressionBackend1Headless
+        ignoreTestFailure: false
+        cucumberReportName: rg-be1
+      - profile: S1-chrome-regression-backend2-headless
+        jobName: S1chromeRegressionBackend2Headless
+        ignoreTestFailure: false
+        cucumberReportName: rg-be2
+      - profile: S1-chrome-regression-backend3-headless
+        jobName: S1chromeRegressionBackend3Headless
+        ignoreTestFailure: false
+        cucumberReportName: rg-be3
+      - profile: S1-chrome-bug-headless
+        jobName: S1chromeBugHeadless
+        ignoreTestFailure: true
+        cucumberReportName: bug
+      - profile: S1-chrome-smoke-backend1-headless
+        jobName: S1chromeSmokeBackend1Headless
+        ignoreTestFailure: false
+        cucumberReportName: sk-be1
+      - profile: S1-chrome-smoke-backend2-headless
+        jobName: S1chromeSmokeBackend2Headless
+        ignoreTestFailure: false
+        cucumberReportName: sk-be2
+      - profile: S1-chrome-smoke-backend3-headless
+        jobName: S1chromeSmokeBackend3Headless
+        ignoreTestFailure: false
+        cucumberReportName: sk-be3
+
+stages:
+
+  - stage: BrowserHeadlessTests
+    jobs:
+
+      - ${{ each bp in parameters.browser_profiles }}:
+          - template: pipeline-template.yaml
+            parameters:
+              browser_profile: ${{ bp.profile }}
+              browser_threads: ${{ parameters.browser_threads }}
+              jobName: ${{ bp.jobName }}
+              ignoreTestFailure: ${{ bp.ignoreTestFailure }}
+              cucumberReportName: ${{ bp.cucumberReportName }}

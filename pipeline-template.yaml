@@ -1,0 +1,92 @@
+parameters:
+  - name: 'browser_profile'
+    type: string
+    default: ''
+  - name: 'browser_threads'
+    type: string
+    default: ''
+  - name: 'jobName'
+    type: string
+    default: ''
+  - name: ignoreTestFailure
+    displayName: Ignore test failure
+    type: boolean
+    default: false
+  - name: cucumberReportName
+    type: string
+    default: ''
+
+
+jobs:
+  - job: ${{ parameters.jobName }}
+
+    workspace:
+      clean: all
+
+    variables:
+      - group: dcs-aec-testing-vargroup-passwords
+
+    pool: vmss-mssh-shr-pool-001
+
+    steps:
+      - script: |
+          ./install-chrome-local.sh
+        displayName: Prepare chrome browser local
+        workingDirectory: $(System.DefaultWorkingDirectory)/scripts
+
+      - task: Maven@3
+        displayName: Run tests on HeadLess Browser
+        inputs:
+          mavenPomFile: '$(System.DefaultWorkingDirectory)/pom.xml'
+          mavenOptions: '-Xmx3072m'
+          options: '-D AEC_BACKOFFICE_CUSTOMERSUPPORTMANAGER_USERNAME=$(aec-backoffice-customersupportmanager-username) -D AEC_BACKOFFICE_CUSTOMERSUPPORTMANAGER_PASSWORD=$(aec-backoffice-customersupportmanager-password) -D AEC_BACKOFFICE_CONTENTAPPROVER_USERNAME=$(aec-backoffice-contentapprover-username) -D AEC_BACKOFFICE_CONTENTAPPROVER_PASSWORD=$(aec-backoffice-contentapprover-password) -D AEC_BACKOFFICE_SHOPMANAGER_USERNAME=$(aec-backoffice-shopmanager-username) -D AEC_BACKOFFICE_SHOPMANAGER_PASSWORD=$(aec-backoffice-shopmanager-password) -D AEC_PARCELLAB_EMAIL=$(aec-parcellab-email) -D AEC_PARCELLAB_PASSWORD=$(aec-parcellab-password) -D AEC_BACKOFFICE_USERNAME=$(aec-backoffice-username) -D AEC_GUEST_PASSWORD=$(aec-guest-password) -D AEC_NEWSLETTER_HOMEPAGE_PASSWORD=$(aec-newsletter-homepage-password) -D AEC_BACKOFFICE_PASSWORD=$(aec-backoffice-password) -D AEC_REGISTERED_CUSTOMER_PASSWORD=$(aec-registered-customer-password) -D AEC_PAYPAL_PASSWORD=$(aec-paypal-password) -D se.threadCount=${{ parameters.browser_threads }}'
+          javaHomeOption: 'JDKVersion'
+          jdkVersionOption: '1.11'
+          jdkArchitectureOption: 'x64'
+          publishJUnitResults: false
+          testResultsFiles: '**/TEST-*.xml'
+          goals: '-P${{ parameters.browser_profile }} -fn --no-transfer-progress clean verify'
+
+      - task: ArchiveFiles@2
+        displayName: Prepare Cucumber HTML Report ZIP
+        inputs:
+          rootFolderOrFile: $(System.DefaultWorkingDirectory)/target/cucumber-html-reports
+          archiveFile: '$(Build.ArtifactStagingDirectory)/Cucumber-Report-${{ parameters.browser_profile }}-$(Build.BuildId).zip'
+
+      - task: PublishBuildArtifacts@1
+        displayName: Publish artifact in the container
+        inputs:
+          PathtoPublish: $(Build.ArtifactStagingDirectory)
+          ArtifactName: 'Cucumber-Report-${{ parameters.browser_profile }}'
+          publishLocation: 'Container'
+
+      - task: NodeTool@0
+        displayName: 'Install Node 12.x'
+        inputs:
+          versionSpec: 12.x
+
+      - task: PublishCucumberReport@1
+        displayName: 'Publish Cucumber Report'
+        inputs:
+          jsonDir: $(System.DefaultWorkingDirectory)/target/json-reports/
+          outputPath: $(System.DefaultWorkingDirectory)/target/json-reports/
+          name: ${{ parameters.cucumberReportName }}
+          theme: 'bootstrap'
+          reportSuiteAsScenarios: true
+          title: 'UI'
+
+      - bash: |
+          cd $(System.DefaultWorkingDirectory)/target/xml-report
+          for filename in ./*.xml; do
+            sed -i "s/io.cucumber.core.plugin.JUnitFormatter/${{ parameters.browser_profile }}/" $filename
+          done
+        displayName: Fix junit report name
+
+      - task: PublishTestResults@2
+        continueOnError: ${{ parameters.ignoreTestFailure }}
+        displayName: Publish test results
+        inputs:
+          testResultsFormat: 'JUnit'
+          testResultsFiles: '**/cucumber*.xml'
+          searchFolder: '$(System.DefaultWorkingDirectory)/target/xml-report'
+          failTaskOnFailedTests: true
