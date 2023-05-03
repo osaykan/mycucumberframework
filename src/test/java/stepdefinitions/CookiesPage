@@ -1,0 +1,24 @@
+package pages.desktop;
+
+import org.openqa.selenium.JavascriptExecutor;
+import org.openqa.selenium.WebElement;
+
+import utilities.desktop.Driver;
+
+public class Cookies {
+    public void cookies() throws InterruptedException {
+        Thread.sleep(2000);
+        JavascriptExecutor jsExecutor = ((JavascriptExecutor) Driver.getDriver());
+        //s2567
+        //WebElement cookies = (WebElement) jsExecutor.executeScript("return document.querySelector(\"#usercentrics-root\").shadowRoot.querySelector(\"#uc-center-container > div.sc-iAEawV.kUWWOI > div > div > div > button.sc-eDvSVe.ffbULy\")");
+
+        //s178
+        WebElement cookies = (WebElement) jsExecutor.executeScript("return document.querySelector(\"#usercentrics-root\").shadowRoot.querySelector(\"#uc-center-container > div.sc-cCjUiG.dFZuoM > div > div > div > button.sc-eDvSVe.ffbULy\")");
+        jsExecutor.executeScript("arguments[0].click();", cookies);
+
+        // Produkt cookies   WebElement cookies= (WebElement) jsExecutor.executeScript("return document.querySelector(\"#usercentrics-root\").shadowRoot.querySelector(\"#uc-center-container > div.sc-iAEawV.tEtgF > div > div > div > button.sc-eDvSVe.ffbULy\")");
+        //                                                                      document.querySelector("#usercentrics-root").shadowRoot.querySelector("#uc-center-container > div.sc-jcMfQk.kAnEcV > div > div > div > button.sc-gswNZR.jhZrXk")
+
+
+    }
+}
