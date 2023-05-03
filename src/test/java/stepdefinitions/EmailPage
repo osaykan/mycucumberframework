@@ -1,0 +1,296 @@
+package pages.desktop;
+
+import org.junit.Assert;
+import org.openqa.selenium.*;
+import org.openqa.selenium.support.FindBy;
+import org.openqa.selenium.support.PageFactory;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.FluentWait;
+import org.openqa.selenium.support.ui.Wait;
+import utilities.ConfigurationReader;
+import utilities.desktop.Driver;
+
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Random;
+import java.util.Set;
+
+public class EmailPage {
+
+
+    static String parentWindowHandle;
+    @FindBy(xpath = "//a[@id='close-inbox']")
+    public WebElement logout_btn;
+    @FindBy(xpath = "//*[contains(text(),'Deine Anmeldung zum ALDI Newsletter')]")
+    public WebElement trash_email_newsletterBestätigungsmail;
+    @FindBy(xpath = "//span[(text()='---ONLINESHOP Erinnerungsservice')]")
+    public WebElement tempr_email_erinnerung_Bestätigungsmail;
+    @FindBy(id = "dismiss-button")
+    public WebElement tempr_email_anzeigeDismiss_btn;
+    @FindBy(name = "LoginButton")
+    public WebElement tempr_login_btn;
+
+    ;
+    @FindBy(id = "LoginLocalPart")
+    public WebElement tempr_email_box;
+
+    ;
+    @FindBy(xpath = "//span[contains(text(),'Sandbox:')]")
+    public WebElement temprEmail_kontakt_Bestätigungsemail;
+
+    ;
+    @FindBy(xpath = "//a[(text()='E-Mail-Adresse bestätigen')]")
+    public WebElement müll_email_erinnerung_Bestätigung_btn;
+
+    ;;
+    @FindBy(xpath = "//div[(text()='ALDI ONLINESHOP Erinnerungsservice')]")
+    public WebElement müllEmail_erinnerung_Bestätigungsemail;
+
+    ;
+    @FindBy(xpath = "//a[(text()='E-Mail-Adresse bestätigen')]")
+    public WebElement müll_email_registrierung_Bestätigung_btn;
+
+    ;
+    @FindBy(xpath = "//span[(text()='AEC-S1: Aktiviere deinen Zugang für den ALDI ONLINESHOP')]")
+    public WebElement tempr_email_registrierung_Beschtätigungsemail;
+
+    ;
+    @FindBy(xpath = "//span[contains(text(),'Deine Anmeldung zum ALDI Newsletter')]")
+    public WebElement tempr_email_newsletterBeschtätigungsMail;
+
+    ;
+    @FindBy(xpath = "//div[contains(text(),'Deine Anmeldung zum ALDI Newsletter')]")
+    public WebElement müll_email_newsletterBeschtätigungsMail;
+
+    ;
+    @FindBy(xpath = "//button[@class='btn btn-email-submit']")
+    public WebElement müll_anmelden_btn;
+
+    ;
+    @FindBy(xpath = "//a[@class='buttonstyles']")
+    public WebElement AN_newsletter_anmeldungAbschließen_btn;
+    @FindBy(xpath = "//input[@id='emailinput']")
+    public WebElement müll_email_box;
+    @FindBy(xpath = "//input[@id='inputEmail']")
+    public WebElement trash_email_box;
+    @FindBy(xpath = "//button[@id='fetch-mails']")
+    public WebElement fetchmails_btn;
+    @FindBy(xpath = "//p[@id='info-message']//b")
+    public WebElement info_message;
+    @FindBy(xpath = "//strong[contains(text(),'aysotes')]")
+    public WebElement tempr_info_message;
+    @FindBy(xpath = "//span[@id='address']")
+    public WebElement müll_info_message;
+    Wait<WebDriver> wait = new FluentWait<WebDriver>(Driver.getDriver())
+            .withTimeout(Duration.ofSeconds(17L))
+            .pollingEvery(Duration.ofSeconds(2L))
+            .ignoring(NoSuchElementException.class);
+    HomePage homePage = new HomePage();
+    JavascriptExecutor jsExecutor = (JavascriptExecutor) Driver.getDriver();
+
+    public EmailPage() {
+        PageFactory.initElements(Driver.getDriver(), this);
+    }
+
+    public void trash_mail_verify(String option) throws InterruptedException {
+
+        Driver.getDriver().get("https://www.trash-mail.com/inbox/");
+        Thread.sleep(10000);
+        int time;
+        String str = "";
+        for (time = 1; time < 40; time++) {
+            Thread.sleep(2000);
+            List<WebElement> element = Driver.getDriver().findElements(By.xpath("//div[@class='well']"));
+            Thread.sleep(1000);
+            for (WebElement s : element) {
+                str = s.getText();
+            }
+            if (!str.contains(option)) {
+                Thread.sleep(25000);
+                Driver.getDriver().findElement(By.xpath("//a[@id='refresh-inbox']")).click();
+                Thread.sleep(2000);
+            } else {
+                Assert.assertTrue(str.contains(option));
+                Thread.sleep(2000);
+                break;
+            }
+        }
+        Assert.assertTrue(str.contains(option));
+    }
+
+    public void trash_email_erstellen() throws InterruptedException {
+        Driver.getDriver().get("https://www.trash-mail.com/inbox/");
+        Thread.sleep(1000);
+        Random random = new Random();
+        int random1 = (int) (Math.random() * 1000000 + 1);
+        Thread.sleep(1000);
+        trash_email_box.sendKeys("testso72_" + random1);
+        fetchmails_btn.click();
+        Thread.sleep(2000);
+
+    }
+
+    public void neue_trash_email_erstellen() throws InterruptedException {
+        Driver.getDriver().get("https://www.trash-mail.com/inbox/");
+        Thread.sleep(1000);
+        Random random = new Random();
+        int random1 = (int) (Math.random() * 1000000 + 1);
+        Thread.sleep(1000);
+        logout_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(trash_email_box));
+        trash_email_box.sendKeys("wasser12_" + random1);
+        fetchmails_btn.click();
+        Thread.sleep(2000);
+
+    }
+
+    public void registrierung_trash_email_verify() throws InterruptedException {
+        Driver.getDriver().get("https://www.trash-mail.com/inbox/");
+        Thread.sleep(12000);
+        int time;
+        String str = "";
+        for (time = 1; time < 9; time++) {
+            Thread.sleep(3000);
+            List<WebElement> element = Driver.getDriver().findElements(By.xpath("//div[@class='well']"));
+            Thread.sleep(2000);
+            for (WebElement s : element) {
+                str = s.getText();
+            }
+            if (!str.contains("noreply")) {
+                Thread.sleep(7000);
+                Driver.getDriver().findElement(By.xpath("//a[@id='refresh-inbox']")).click();
+                Thread.sleep(2000);
+            } else {
+                Thread.sleep(2000);
+                Driver.getDriver().findElement(By.xpath("//p[@id='message-from-1']")).click();
+                wait.until(ExpectedConditions.visibilityOfElementLocated(
+                        By.xpath("(//td[@style='word-break: break-all;']//a)[1]")));
+                Thread.sleep(2000);
+                Driver.getDriver().findElement(By.xpath("(//td[@style='word-break: break-all;']//a)[1]")).click();
+                //Assert.assertTrue(homePage.registrierung_zuranmeldung_btn.isDisplayed());
+                if (ConfigurationReader.getProperty("AEC_SHOP_URL").contains("https://www-ac-preprod.an-cms.com/")) {
+                    Driver.getDriver().get("https://www-ac-s.preod.an-cms.com/");
+                    Thread.sleep(2000);
+                }
+                Assert.assertTrue(Driver.getDriver().getCurrentUrl().contains(ConfigurationReader.getProperty("_SHOP_URL")));
+                break;
+            }
+        }
+
+    }
+
+    public void newsletter_trash_mail_verify() throws InterruptedException {
+
+        Driver.getDriver().get("https://www.trash-mail.com/inbox/");
+        Thread.sleep(10000);
+        int time;
+        String str = "";
+        LocalDateTime dateTime = LocalDateTime.now();
+        System.out.println("Anfang : " + dateTime);
+        Driver.getDriver().findElement(By.xpath("//a[@id='refresh-inbox']")).click();
+        Thread.sleep(1000);
+
+        for (time = 1; time <= 15; time++) {
+            Thread.sleep(1000);
+            List<WebElement> element = Driver.getDriver().findElements(By.xpath("//div[@class='well']"));
+            Thread.sleep(2000);
+            for (WebElement s : element) {
+                str = s.getText();
+            }
+            if (!str.contains("newsletter")) {
+                Thread.sleep(60000);   //1 min
+                LocalDateTime dateTime1 = LocalDateTime.now();
+                System.out.println("Widerholen : " + dateTime1);
+                Driver.getDriver().findElement(By.xpath("//a[@id='refresh-inbox']")).click();
+                Thread.sleep(1000);
+            } else {
+                LocalDateTime dateTime2 = LocalDateTime.now();
+                System.out.println("Angekommen : " + dateTime2);
+                trash_email_newsletterBestätigungsmail.click();
+                Thread.sleep(2000);
+                break;
+            }
+        }
+    }
+
+    public void newsletter_inFoter_trash_mail_verify() throws InterruptedException {
+        Driver.getDriver().get("https://www.trash-mail.com/inbox/");
+        int time;
+        for (time = 1; time < 90; time++) {
+            Thread.sleep(5000);
+            List<WebElement> element = Driver.getDriver().findElements(By.xpath("//tr"));
+            if (element.size() == 0) {
+                Driver.getDriver().findElement(By.xpath("//a[@id='refresh-inbox']")).click();
+            } else {
+                trash_email_newsletterBestätigungsmail.click();
+                Thread.sleep(2000);
+                break;
+            }
+        }
+
+    }
+
+    public void erinnerung_trash_email_verify() throws InterruptedException {
+        Driver.getDriver().get("https://www.trash-mail.com/inbox/");
+        Thread.sleep(2000);
+        int time;
+        for (time = 1; time < 90; time++) {
+            Thread.sleep(2000);
+            List<WebElement> element = Driver.getDriver().findElements(By.xpath("//tr"));
+            if (element.size() == 0) {
+                Thread.sleep(3000);
+                Driver.getDriver().findElement(By.xpath("//a[@id='refresh-inbox']")).click();
+            } else {
+                Thread.sleep(2000);
+                Driver.getDriver().findElement(By.xpath("//p[(text()='--- ONLINESHOP Erinnerungsservice')]")).click();
+                wait.until(ExpectedConditions.visibilityOfElementLocated(
+                        By.xpath("(//td[@style='word-break: break-all;']//a)[1]")));
+                Driver.getDriver().findElement(By.xpath("(//td[@style='word-break: break-all;']//a)[1]")).click();
+                Thread.sleep(2000);
+                break;
+            }
+        }
+
+    }
+
+    public void kontaktformular_trash_email_verify() throws InterruptedException {
+        Driver.getDriver().get("https://www.trash-mail.com/inbox/");
+        Thread.sleep(2000);
+        int time;
+        String str = "";
+        for (time = 1; time < 9; time++) {
+            Thread.sleep(3000);
+            List<WebElement> element = Driver.getDriver().findElements(By.xpath("//div[@class='well']"));
+            for (WebElement s : element) {
+                str = s.getText();
+            }
+            if (!str.contains("noreply")) {
+                Thread.sleep(4000);
+                Driver.getDriver().findElement(By.xpath("//a[@id='refresh-inbox']")).click();
+            } else {
+                Thread.sleep(2000);
+                WebElement kontaktmail = Driver.getDriver().findElement(By.xpath("//p[@id='message-from-1']"));
+                Assert.assertTrue(kontaktmail.isDisplayed());
+                break;
+            }
+        }
+
+    }
+
+    public void childWindowHandle() {
+        parentWindowHandle = Driver.getDriver().getWindowHandle();
+        Set<String> allWindowHandles = Driver.getDriver().getWindowHandles();
+        for (String childWindowHandle : allWindowHandles) {
+            if (!childWindowHandle.equals(parentWindowHandle)) {
+                Driver.getDriver().switchTo().window(childWindowHandle);
+            }
+        }
+
+    }
+
+    public void parentWindowHandle() {
+        Driver.getDriver().switchTo().window(parentWindowHandle);
+    }
+
+}
