@@ -1,0 +1,53 @@
+package utilities;
+
+import java.io.File;
+import java.lang.ClassLoader;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.io.InputStreamReader;
+import java.nio.charset.Charset;
+import java.util.Map;
+import java.util.Properties;
+
+public class ConfigurationReader {
+
+    private static Properties properties;
+
+    static {
+        String defaultConfigs = "default-configs.properties";
+        String overrides = "target/overrides.properties";
+        String localConfigs = "/home/azureuser/Development/passwords/overrides.properties";
+        try {
+            ClassLoader classloader = Thread.currentThread().getContextClassLoader();
+            InputStream fileConfigs = classloader.getResourceAsStream(defaultConfigs);
+            properties = new Properties();
+            properties.load(new InputStreamReader(fileConfigs, Charset.forName("UTF-8")));
+
+            File overrideFile = new File(overrides);
+            File localFile = new File(localConfigs);
+
+            if (localFile.exists() && !localFile.isDirectory()){
+                FileInputStream fileLocal = new FileInputStream(localConfigs);
+                Properties propertiesLocal = new Properties();
+                propertiesLocal.load(new InputStreamReader(fileLocal, Charset.forName("UTF-8")));
+                properties.putAll(propertiesLocal);
+            } else if(overrideFile.exists() && !overrideFile.isDirectory()) {
+                FileInputStream fileOverrides = new FileInputStream(overrides);
+                Properties propertiesOverrides = new Properties();
+                propertiesOverrides.load(new InputStreamReader(fileOverrides, Charset.forName("UTF-8")));
+                properties.putAll(propertiesOverrides);
+            } else {
+                Map<String, String> env = System.getenv();
+                properties.putAll(env);
+            }
+           
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    }
+
+    public static String getProperty(String key) {
+        return properties.getProperty(key);
+    }
+
+}
