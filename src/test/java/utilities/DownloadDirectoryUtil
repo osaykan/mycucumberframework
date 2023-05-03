@@ -1,0 +1,24 @@
+package utilities;
+
+import java.io.File;
+
+public class DownloadDirectoryUtil {
+
+	private String downloadDirectoryPath = System.getProperty("user.dir") + File.separator + "target" + File.separator
+			+ "Downloads";
+
+	public DownloadDirectoryUtil() {
+	}
+
+	public void createDownloadDirectory() {
+		File directory = new File(downloadDirectoryPath);
+		if (!directory.exists()) {
+			directory.mkdir();
+		}
+	}
+
+	public String getDownloadDirectoryPath() {
+		return this.downloadDirectoryPath;
+	}
+
+}
