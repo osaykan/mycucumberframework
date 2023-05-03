@@ -1,0 +1,3372 @@
+ JavascriptExecutor jsExecutor = ((JavascriptExecutor) Driver.getDriver());
+    Wait<WebDriver> wait = new FluentWait<WebDriver>(Driver.getDriver()).withTimeout(Duration.ofSeconds(10L)).pollingEvery(Duration.ofSeconds(2L)).ignoring(NoSuchElementException.class);
+   ---------------------
+   
+    private File getFileFromResource(String fileName) throws URISyntaxException {
+        ClassLoader classLoader = getClass().getClassLoader();
+        URL resource = classLoader.getResource(fileName);
+        if (resource == null) {
+            throw new IllegalArgumentException("file not found! " + fileName);
+        } else {
+            // failed if files have whitespaces or special characters
+            //return new File(resource.getFile());
+            return new File(resource.toURI());
+        }
+    }
+    @Given........
+     File file = getFileFromResource("test.jpg");
+
+        System.out.println("Formular7: upload");
+
+        // homePage.kontakt_file_upload.click();
+
+        WebElement addFile = driver.findElement(By.xpath(".//input[@type='file']"));
+        addFile.sendKeys(file.toString());
+        
+        
+          wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("//label[@class='range__label']//strong")));
+        String punkt = homePage.punkt_aufderSkala.getText() + "";
+
+        System.out.println("Skala......:" + punkt);
+
+        Thread.sleep(3000);
+
+        Actions actions = new Actions(Driver.getDriver());
+        actions.sendKeys(Keys.PAGE_DOWN).perform();
+        int punkt1 = Integer.valueOf(punkt);
+        int a = (790 * punkt1) / 100;
+        Thread.sleep(2000);
+        jsExecutor.executeScript("arguments [0] .scrollIntoView ();", homePage.kontakt_email_box);
+        Thread.sleep(2000);
+        actions.dragAndDropBy(Driver.getDriver().
+                findElement(By.xpath("//div[@class='an-touch-area']")), a, 6).click().perform();
+        Thread.sleep(3000);
+        homePage.kontakt_abschicken_btn.click();
+        -----------------------------------------------------------------------------------
+        private void formulare_mit_upload(String string) throws InterruptedException, URISyntaxException {
+
+        File file = getFileFromResource("test.jpg");
+
+        System.out.println("Formular7: upload");
+
+        // homePage.kontakt_file_upload.click();
+
+        WebElement addFile = driver.findElement(By.xpath(".//input[@type='file']"));
+        addFile.sendKeys(file.toString());
+     @Given("Formular8 ausfüllen upload und abschicken {string}")
+    public void formular8_ausfüllen_upload_und_abschicken(String string) throws InterruptedException, URISyntaxException {                       //Datenschutz
+        Select options = new Select(homePage.kontakt_themenauswahl_btn);
+        options.selectByIndex(8);
+
+        homePage.kontakt_mitteilungstext_box.sendKeys("Datenschutz");
+        Thread.sleep(2000);
+        formulare_mit_upload(string);
+        ----------------------------------------------------------------------------------------
+         String value1 = ConfigurationReader.getProperty("AEC_REGISTERED_CUSTOMER_EMAIL");
+        jsExecutor.executeScript("arguments[0].value='" + value1 + "';", homePage.login_email);
+          jsExecutor.executeScript("arguments[0].click();", zahlungPage.weiter_zur_zahlungsart_btn);
+        
+        
+        --------------------------------------------------------------
+         Actions actions = new Actions(Driver.getDriver());
+         actions.moveToElement(homePage.test_user_btn).perform();
+         --------------------------------------------------------------------
+           Select Land = new Select(homePage.billingAdressLand_button);
+        Land.selectByVisibleText("Niederlande");
+        actions.sendKeys(Keys.PAGE_DOWN).perform();
+        
+        ---------------------------------------------------
+         Thread.sleep(12000);
+        int time;
+        String str = "";
+        for (time = 1; time < 9; time++) {
+            Thread.sleep(3000);
+            List<WebElement> element = Driver.getDriver().findElements(By.xpath("//div[@class='well']"));
+            Thread.sleep(2000);
+
+            for (WebElement s : element) {
+                str = s.getText();
+            }
+            if (!str.contains("noreply")) {
+                Thread.sleep(7000);
+                Driver.getDriver().findElement(By.xpath("//a[@id='refresh-inbox']")).click();
+                Thread.sleep(2000);
+            } else {
+                Thread.sleep(2000);
+                Driver.getDriver().findElement(By.xpath("//p[@id='message-from-1']")).click();
+                wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("(//td[@style='word-break: break-all;']//a)[1]")));
+                Driver.getDriver().findElement(By.xpath("(//td[@style='word-break: break-all;']//a)[1]")).click();
+                Thread.sleep(1000);
+                Assert.assertTrue(homePage.registrierung_zuranmeldung_btn.isDisplayed());
+                if (ConfigurationReader.getProperty("AEC_SHOP_URL").contains("https://www-c-s.preod.an-cms.com/")) {
+                    Driver.getDriver().get("https://www-ec-s.preprd.an-cms.com/");
+                    Thread.sleep(2000);
+                }
+
+                Assert.assertTrue(Driver.getDriver().getCurrentUrl().contains(ConfigurationReader.getProperty("C_SHOP_URL")));
+
+                break;
+            }
+        }
+        -------------------------------------------------------------------------------------------------
+         @Given("Ein Produkt mit zweien Packages Status READY setzen")
+    public void ein_produkt_mit_zweien_packages_status_ready_setzen() throws InterruptedException, UnsupportedEncodingException {
+        Thread.sleep(2000);
+        //     Token genieren
+
+        tokenPage.accessToken();
+        //      Abruf Einer Bestellung
+        String endpoint;
+        if (ConfigurationReader.getProperty("AEC_SHOP_URL").contains("https://www-aec-s1.preprod.an-cms.com/")) {
+            endpoint = "https://avendorwebservices.co6hnkccbu-aitpla2-s1-public.model-t.cc.commerce.ondemand.com/vendorwebservices/2.0/DE/vendor/";
+        } else {
+            endpoint = "https://vendorwebservices.co6hnkccbu-itpla2-s2-public.model-t.cc.commerce.ondemand.com/vendorwebservices/2.0/DE/vendor/";
+        }
+
+        Thread.sleep(7000);
+        Response response7 = given().auth().oauth2(tokenPage.token)
+                .accept(ContentType.JSON).
+                contentType(ContentType.JSON).when()
+                .get(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode);
+        Assert.assertTrue(response7.statusCode() == 200 || response7.statusCode() == 201);             //StatusCode überprüfen
+        String expected_orderCode = "[" + orderCode + "]";                                                         //      Frontend Bestellnummer
+        JsonPath jsonPath = response7.jsonPath();
+        Assert.assertEquals("orderCode ist nicht identisch", expected_orderCode, jsonPath.get("orders.code").toString());  //Backend orderCode
+
+        //  POST====>Erzeugung von Lieferung mit zweien Packages
+        //expectedDelivery date generiern
+        int min = 100000000;                                                                   //zufällig vendorConsignmentCode und trackingID erstellen
+        int max = 990000000;
+        int min1 = 100000000;
+        int max1 = 990000000;
+        int randon0 = (int) Math.floor(Math.random() * (max - min + 1) + min);
+        random_trackingID = randon0 + "972";
+        int random2 = (int) Math.floor(Math.random() * (max1 - min1 + 1) + min1);
+        Random random = new Random();
+        char randomchar = (char) (random.nextInt(26) + 'A');
+        vendorConsignmentCode = "" + randomchar + random2 + randomchar + randomchar;
+        vendorPackageCode = "" + orderCode;
+        Response response9 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"DHL\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 1,\n" +
+                        "          \"quantity\": 1,\n" +
+                        "        \"packageEntries\": [\n" +
+                        "          {\n" +
+                        "            \"status\": \"READY\",\n" +
+                        "            \"statusText\": \"READY\",\n" +
+                        "            \"vendorPackageCode\": \"" + vendorPackageCode + "-1\"\n" +
+                        "          },\n" +
+                        "           {\n" +
+                        "            \"status\": \"READY\",\n" +
+                        "            \"statusText\": \"READY\",\n" +
+                        "            \"vendorPackageCode\": \"" + vendorPackageCode + "-2\"\n" +
+                        "          }\n" +
+                        "        ]\n" +
+                        "      \n" +
+                        "      }\n" +
+                        "    ],\n" +
+                        "      \"shippingAddress\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"type\": \"DEFAULT\"\n" +
+                        "    },\n" +
+                        "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "\"\n" +
+                        "  }\n" +
+                        "]\n"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+        Assert.assertTrue(response9.statusCode() == 200 || response9.statusCode() == 201);              // Statuscode überprüfen
+
+    }
+
+    @Given("Ein Produkt mit zweien Packages Status SHIPPED setzen")
+    public void ein_produkt_mit_zweien_packages_status_shipped_setzen() throws InterruptedException {
+
+        Thread.sleep(2000);
+        String endpoint;
+        if (ConfigurationReader.getProperty("AEC_SHOP_URL").contains("https://www-c-s.preprod.an-cms.com/")) {
+            endpoint = "https://divendorwebservices.co6hnkccbu-tpla2-s-public.model-t.cc.commerce.ondemand.com/vendorwebservices/2.0/DE/vendor/";
+        } else {
+            endpoint = "https://endorwebservices.co6hnkccbu-aitpla2-s2-public.model-t.cc.commerce.ondemand.com/ndorwebservices/2.0/DE/vendor/";
+        }
+
+        Thread.sleep(3000);
+        LocalDate date = LocalDate.now();                                                             //expectedDelivery date generiern
+        //POST==> Erzeugung von Lieferung status SHIPPED
+        Response response2 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"DHL\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 1,\n" +
+                        "        \"packageEntries\": [\n" +
+                        "          {\n" +
+                        "            \"shippingDate\": \"" + date + "\",\n" +
+                        "            \"status\": \"SHIPPED\",\n" +
+                        "            \"statusText\": \"versendet\",\n" +
+                        "            \"trackingId\": \"" + random_trackingID + "\",\n" +
+                        "            \"trackingLink\": \"https://trackingLink.de\",\n" +
+                        "            \"vendorPackageCode\": \"" + vendorPackageCode + "-1\"\n" +
+                        "          } ,\n" +
+                        "           {\n" +
+                        "            \"shippingDate\": \"" + date + "\",\n" +
+                        "            \"status\": \"SHIPPED\",\n" +
+                        "            \"statusText\": \"versendet\",\n" +
+                        "            \"trackingId\": \"" + random_trackingID + "\",\n" +
+                        "            \"trackingLink\": \"https://trackingLink.de\",\n" +
+                        "            \"vendorPackageCode\": \"" + vendorPackageCode + "-2\"\n" +
+                        "          }\n" +
+                        "          ],\n" +
+                        "        \"quantity\": 1\n" +
+                        "      }\n" +
+                        "    ],\n" +
+                        "      \"shippingAddress\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"firstName\": \"string\",\n" +
+                        "      \"lastName\": \"string\",\n" +
+                        "      \"packstationNumber\": \"string\",\n" +
+                        "      \"postNumber\": \"string\",\n" +
+                        "      \"postOfficeNumber\": \"string\",\n" +
+                        "      \"postalCode\": \"string\",\n" +
+                        "      \"remarks\": \"string\",\n" +
+                        "      \"salutationCode\": \"MR\",\n" +
+                        "      \"streetName\": \"string\",\n" +
+                        "      \"streetNumber\": \"string\",\n" +
+                        "      \"town\": \"string\",\n" +
+                        "      \"type\": \"DEFAULT\"\n" +
+                        "    },\n" +
+                        "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "\"\n" +
+                        "  }\n" +
+                        "]"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+        Assert.assertTrue(response2.statusCode() == 200 || response2.statusCode() == 201);              // Statuscode überprüfen
+    }
+
+    @Given("Ein Produkt mit zweien Packages Status DELIVERED setzen")
+    public void ein_produkt_mit_zweien_packages_status_delivered_setzen() throws InterruptedException {
+
+        Thread.sleep(2000);
+        String endpoint;
+        if (ConfigurationReader.getProperty("AEC_SHOP_URL").contains("https://www-c-s9.preprod.an-cms.com/")) {
+            endpoint = "https://vendorwebservices.co6hnkccbu-itpla2-s1-public.model-t.cc.commerce.ondemand.com/vendorwebservices/2.0/DE/vendor/";
+        } else {
+            endpoint = "https://vendorwebservices.co6hnkccbu-tpla2-s2-public.model-t.cc.commerce.ondemand.com/vendorwebservices/2.0/DE/vendor/";
+        }
+
+        Thread.sleep(3000);
+        LocalDate date = LocalDate.now();                                                             //expectedDelivery date generiern
+        //POST==> Erzeugung von Lieferung status DELIVERED
+        Response response3 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"DHL\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 1,\n" +
+                        "        \"quantity\": 1,\n" +
+                        "        \"packageEntries\": [\n" +
+                        "          {\n" +
+                        "                  \"vendorPackageCode\": \"" + vendorPackageCode + "-1\",\n" +
+                        "                  \"statusText\": \"Parcel is out for delivery\",\n" +
+                        "                  \"trackingId\": \"" + random_trackingID + "\",\n" +
+                        "                  \"trackingLink\": \"https://trackingLink.de\",\n" +
+                        "                  \"shippingDate\": \"" + date + "\",\n" +
+                        "                  \"status\": \"DELIVERED\",\n" +
+                        "                  \"receiptDelivery\": \"" + date + "\"\n" +
+                        "                },\n" +
+                        "                 {\n" +
+                        "                  \"vendorPackageCode\": \"" + vendorPackageCode + "-2\",\n" +
+                        "                  \"statusText\": \"Parcel is out for delivery\",\n" +
+                        "                  \"trackingId\": \"" + random_trackingID + "\",\n" +
+                        "                  \"trackingLink\": \"https://trackingLink.de\",\n" +
+                        "                  \"shippingDate\": \"" + date + "\",\n" +
+                        "                  \"status\": \"DELIVERED\",\n" +
+                        "                  \"receiptDelivery\": \"" + date + "\"\n" +
+                        "                }\n" +
+                        "        ]\n" +
+                        "        \n" +
+                        "      }\n" +
+                        "    ],    \n" +
+                        "      \"shippingAddress\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"type\": \"DEFAULT\"\n" +
+                        "    },\n" +
+                        "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "\"\n" +
+                        "  }\n" +
+                        "]"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+        Assert.assertTrue(response3.statusCode() == 200 || response3.statusCode() == 201);              // Statuscode überprüfen
+    }
+    -------------------------------------------------------------------------------------
+    
+    package stepdefinitions.desktop;
+
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
+import io.restassured.http.ContentType;
+import io.restassured.path.json.JsonPath;
+import io.restassured.response.Response;
+import org.junit.Assert;
+import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.FluentWait;
+import org.openqa.selenium.support.ui.Wait;
+import pages.desktop.Bestellung;
+import pages.desktop.EmailPage;
+import pages.desktop.HomePage;
+import pages.desktop.TokenPage;
+import utilities.ConfigurationReader;
+import utilities.desktop.Driver;
+
+import java.io.UnsupportedEncodingException;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Random;
+
+import static io.restassured.RestAssured.given;
+
+public class RTB_QAT_861_Customer_createOrderWhithTwoProdukts_asGuest_whit_Carrier_TrackingID_TrackingLink_TwoShipments_deliveredAsOne_packages {
+
+
+    static String orderCode;
+    TokenPage tokenPage = new TokenPage();
+    Bestellung bestellung = new Bestellung();
+    EmailPage emailPage = new EmailPage();
+    HomePage homePage = new HomePage();
+    Wait<WebDriver> wait = new FluentWait<WebDriver>(Driver.getDriver())
+            .withTimeout(Duration.ofSeconds(10L))
+            .pollingEvery(Duration.ofSeconds(2L))
+            .ignoring(NoSuchElementException.class);
+    String random_trackingID1;
+    String random_trackingID2;
+    String vendorConsignmentCode;
+    String vendorPackageCode;
+    String alConsignmentCode2;
+    String alConsignmentCode1;
+
+    @Given("Zwei Produkte mit einem Package für Status SHIPPED bestellen")
+    public void zwei_produkte_mit_einem_package_für_status_shipped_bestellen() throws InterruptedException {
+        bestellung.emailErstellen_zwei_medionDE_ProduktAlsGast_bestellen();
+        orderCode = bestellung.bestellnummer;
+        Thread.sleep(5000);
+
+    }
+
+    @Given("Zwei Produkte mit einem Package Status READY setzen")
+    public void zwei_produkte_mit_einem_package_status_ready_setzen() throws InterruptedException, UnsupportedEncodingException {
+
+        Thread.sleep(2000);
+        //     Token genieren
+
+        tokenPage.accessToken();
+        //      Abruf Einer Bestellung
+        String endpoint;
+        if (ConfigurationReader.getProperty("AEC_SHOP_URL").contains("https://www-aec-s1.preprod.an-cms.com/")) {
+            endpoint = "https://alvendorwebservices.co6hnkccbu-alitpla2-s1-public.model-t.cc.commerce.ondemand.com/alvendorwebservices/2.0/DE/vendor/";
+        } else {
+            endpoint = "https://alvendorwebservices.co6hnkccbu-altpla2-s2-public.model-t.cc.commerce.ondemand.com/alvendorwebservices/2.0/DE/vendor/";
+        }
+
+        Thread.sleep(7000);
+        Response response7 = given().auth().oauth2(tokenPage.token)
+                .accept(ContentType.JSON).
+                contentType(ContentType.JSON).when()
+                .get(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode);
+        Assert.assertTrue(response7.statusCode() == 200 || response7.statusCode() == 201);             //StatusCode überprüfen
+        String expected_orderCode = "[" + orderCode + "]";                                                         //      Frontend Bestellnummer
+        JsonPath jsonPath = response7.jsonPath();
+        Assert.assertEquals("orderCode ist nicht identisch", expected_orderCode, jsonPath.get("orders.code").toString());  //Backend orderCode
+        //  POST====>Erzeugung von Lieferung mit zweien Packages
+        //expectedDelivery date generiern
+        int min = 100000000;                                                                   //zufällig vendorConsignmentCode und trackingID erstellen
+        int max = 990000000;
+        int min1 = 100000000;
+        int max1 = 990000000;
+        int randon0 = (int) Math.floor(Math.random() * (max - min + 1) + min);
+        random_trackingID1 = randon0 + "972";
+        int randon10 = (int) Math.floor(Math.random() * (max - min + 1) + min);
+        random_trackingID2 = randon10 + "279";
+        int random2 = (int) Math.floor(Math.random() * (max1 - min1 + 1) + min1);
+        Random random = new Random();
+        char randomchar = (char) (random.nextInt(26) + 'A');
+        vendorConsignmentCode = "" + randomchar + random2 + randomchar + randomchar;
+        vendorPackageCode = "" + orderCode;
+        Response response9 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"DHL\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 1,\n" +
+                        "          \"quantity\": 1,\n" +
+                        "        \"packageEntries\": [\n" +
+                        "          {\n" +
+                        "            \"status\": \"READY\",\n" +
+                        "            \"statusText\": \"READY\",\n" +
+                        "            \"vendorPackageCode\": \"" + vendorPackageCode + "\"\n" +
+                        "          }\n" +
+                        "        ]\n" +
+                        "      \n" +
+                        "      }\n" +
+                        "    ],\n" +
+                        "      \"shippingAddress\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"type\": \"DEFAULT\"\n" +
+                        "    },\n" +
+                        "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "-1\"\n" +
+                        "  }\n" +
+                        "]\n"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+        Assert.assertTrue(response9.statusCode() == 200 || response9.statusCode() == 201);              // Statuscode überprüfen
+        Thread.sleep(2000);
+        Response response8 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"DHL\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 2,\n" +
+                        "          \"quantity\": 1,\n" +
+                        "        \"packageEntries\": [\n" +
+                        "          {\n" +
+                        "            \"status\": \"READY\",\n" +
+                        "            \"statusText\": \"READY\",\n" +
+                        "            \"vendorPackageCode\": \"" + vendorPackageCode + "\"\n" +
+                        "          }\n" +
+                        "        ]\n" +
+                        "      \n" +
+                        "      }\n" +
+                        "    ],\n" +
+                        "      \"shippingAddress\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"type\": \"DEFAULT\"\n" +
+                        "    },\n" +
+                        "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "-2\"\n" +
+                        "  }\n" +
+                        "]\n"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+        Assert.assertTrue(response8.statusCode() == 200 || response8.statusCode() == 201);              // Statuscode überprüfen
+        Thread.sleep(2000);
+    }
+
+    @Given("Zwei Produkte mit einem Package Status SHIPPED setzen")
+    public void zwei_produkte_mit_einem_package_status_shipped_setzen() throws InterruptedException {
+
+        Thread.sleep(2000);
+        String endpoint;
+        if (ConfigurationReader.getProperty("AEC_SHOP_URL").contains("https://www-aec-s1.preprod.an-cms.com/")) {
+            endpoint = "https://alvendorwebservices.co6hnkccbu-alitpla2-s1-public.model-t.cc.commerce.ondemand.com/alvendorwebservices/2.0/DE/vendor/";
+        } else {
+            endpoint = "https://alvendorwebservices.co6hnkccbu-aldtpla2-s2-public.model-t.cc.commerce.ondemand.com/alvendorwebservices/2.0/DE/vendor/";
+        }
+
+        Thread.sleep(3000);
+        LocalDate date = LocalDate.now();                                                             //expectedDelivery date generiern
+        //POST==> Erzeugung von Lieferung status SHIPPED
+        Response response2 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"DHL\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 1,\n" +
+                        "        \"packageEntries\": [\n" +
+                        "           {\n" +
+                        "            \"shippingDate\": \"" + date + "\",\n" +
+                        "            \"status\": \"SHIPPED\",\n" +
+                        "            \"statusText\": \"versendet\",\n" +
+                        "            \"trackingId\": \"" + random_trackingID1 + "\",\n" +
+                        "            \"trackingLink\": \"https://trackingLink.de\",\n" +
+                        "            \"vendorPackageCode\": \"" + vendorPackageCode + "\"\n" +
+                        "          }\n" +
+                        "          ],\n" +
+                        "        \"quantity\": 1\n" +
+                        "      }\n" +
+                        "    ],\n" +
+                        "      \"shippingAddress\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"firstName\": \"string\",\n" +
+                        "      \"lastName\": \"string\",\n" +
+                        "      \"packstationNumber\": \"string\",\n" +
+                        "      \"postNumber\": \"string\",\n" +
+                        "      \"postOfficeNumber\": \"string\",\n" +
+                        "      \"postalCode\": \"string\",\n" +
+                        "      \"remarks\": \"string\",\n" +
+                        "      \"salutationCode\": \"MR\",\n" +
+                        "      \"streetName\": \"string\",\n" +
+                        "      \"streetNumber\": \"string\",\n" +
+                        "      \"town\": \"string\",\n" +
+                        "      \"type\": \"DEFAULT\"\n" +
+                        "    },\n" +
+                        "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "-1\"\n" +
+                        "  }\n" +
+                        "]"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+        Thread.sleep(2000);
+        Assert.assertTrue(response2.statusCode() == 200 || response2.statusCode() == 201);              // Statuscode überprüfen
+        Thread.sleep(3000);
+        Response response3 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"DHL\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 2,\n" +
+                        "        \"packageEntries\": [\n" +
+                        "           {\n" +
+                        "            \"shippingDate\": \"" + date + "\",\n" +
+                        "            \"status\": \"SHIPPED\",\n" +
+                        "            \"statusText\": \"versendet\",\n" +
+                        "            \"trackingId\": \"" + random_trackingID2 + "\",\n" +
+                        "            \"trackingLink\": \"https://trackingLink.de\",\n" +
+                        "            \"vendorPackageCode\": \"" + vendorPackageCode + "\"\n" +
+                        "          }\n" +
+                        "          ],\n" +
+                        "        \"quantity\": 1\n" +
+                        "      }\n" +
+                        "    ],\n" +
+                        "      \"shippingAddress\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"firstName\": \"string\",\n" +
+                        "      \"lastName\": \"string\",\n" +
+                        "      \"packstationNumber\": \"string\",\n" +
+                        "      \"postNumber\": \"string\",\n" +
+                        "      \"postOfficeNumber\": \"string\",\n" +
+                        "      \"postalCode\": \"string\",\n" +
+                        "      \"remarks\": \"string\",\n" +
+                        "      \"salutationCode\": \"MR\",\n" +
+                        "      \"streetName\": \"string\",\n" +
+                        "      \"streetNumber\": \"string\",\n" +
+                        "      \"town\": \"string\",\n" +
+                        "      \"type\": \"DEFAULT\"\n" +
+                        "    },\n" +
+                        "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "-2\"\n" +
+                        "  }\n" +
+                        "]"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+        Thread.sleep(2000);
+        Assert.assertTrue(response3.statusCode() == 200 || response3.statusCode() == 201);              // Statuscode überprüfen
+        Thread.sleep(7000);
+
+    }
+
+    @Given("Zwei Produkte mit einem Package Status DELIVERED setzen")
+    public void zwei_produkte_mit_einem_package_status_delivered_setzen() throws InterruptedException {
+
+        Thread.sleep(2000);
+        String endpoint;
+        if (ConfigurationReader.getProperty("AEC_SHOP_URL").contains("https://www-aec-s1.preprod.an-cms.com/")) {
+            endpoint = "https://alvendorwebservices.co6hnkccbu-alitpla2-s1-public.model-t.cc.commerce.ondemand.com/alvendorwebservices/2.0/DE/vendor/";
+        } else {
+            endpoint = "https://alvendorwebservices.co6hnkccbu-altpla2-s2-public.model-t.cc.commerce.ondemand.com/alvendorwebservices/2.0/DE/vendor/";
+        }
+
+        Thread.sleep(3000);
+        LocalDate date = LocalDate.now();                                                             //expectedDelivery date generiern
+        //POST==> Erzeugung von Lieferung status SHIPPED
+        Response response2 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"DHL\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 1,\n" +
+                        "        \"quantity\": 1,\n" +
+                        "        \"packageEntries\": [\n" +
+                        "          {\n" +
+                        "                  \"vendorPackageCode\": \"" + vendorPackageCode + "\",\n" +
+                        "                  \"statusText\": \"Parcel is out for delivery\",\n" +
+                        "                  \"trackingId\": \"" + random_trackingID1 + "\",\n" +
+                        "                  \"trackingLink\": \"https://trackingLink.de\",\n" +
+                        "                  \"shippingDate\": \"" + date + "\",\n" +
+                        "                  \"status\": \"DELIVERED\",\n" +
+                        "                  \"receiptDelivery\": \"" + date + "\"\n" +
+                        "                }\n" +
+                        "        ]\n" +
+                        "        \n" +
+                        "      }\n" +
+                        "    ],    \n" +
+                        "      \"shippingAddress\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"type\": \"DEFAULT\"\n" +
+                        "    },\n" +
+                        "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "-1\"\n" +
+                        "  }\n" +
+                        "]"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+        Thread.sleep(2000);
+        Assert.assertTrue(response2.statusCode() == 200 || response2.statusCode() == 201);              // Statuscode überprüfen
+        Thread.sleep(2000);
+        Response response3 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"DHL\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 2,\n" +
+                        "        \"quantity\": 1,\n" +
+                        "        \"packageEntries\": [\n" +
+                        "          {\n" +
+                        "                  \"vendorPackageCode\": \"" + vendorPackageCode + "\",\n" +
+                        "                  \"statusText\": \"Parcel is out for delivery\",\n" +
+                        "                  \"trackingId\": \"" + random_trackingID2 + "\",\n" +
+                        "                  \"trackingLink\": \"https://trackingLink.de\",\n" +
+                        "                  \"shippingDate\": \"" + date + "\",\n" +
+                        "                  \"status\": \"DELIVERED\",\n" +
+                        "                  \"receiptDelivery\": \"" + date + "\"\n" +
+                        "                }\n" +
+                        "        ]\n" +
+                        "        \n" +
+                        "      }\n" +
+                        "    ],    \n" +
+                        "      \"shippingAddress\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"type\": \"DEFAULT\"\n" +
+                        "    },\n" +
+                        "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "-2\"\n" +
+                        "  }\n" +
+                        "]"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+        Thread.sleep(2000);
+        Assert.assertTrue(response3.statusCode() == 200 || response3.statusCode() == 201);              // Statuscode überprüfen
+        JsonPath jsonPath2 = response2.jsonPath();
+        String ConsignmentCode1 = jsonPath2.get("consignments.consignment.alConsignmentCode").toString();
+        alConsignmentCode1 = ConsignmentCode1.substring(1, ConsignmentCode1.length() - 1);
+        JsonPath jsonPath3 = response3.jsonPath();
+        String ConsignmentCode2 = jsonPath3.get("consignments.consignment.alConsignmentCode").toString();
+        alConsignmentCode2 = ConsignmentCode2.substring(1, ConsignmentCode2.length() - 1);
+    }
+
+    @Given("Zwei Produkte mit einem Package TrackingID eingeben und Bestellung überprüfen")
+    public void zwei_produkte_mit_einem_package_tracking_id_eingeben_und_bestellung_überprüfen() throws InterruptedException {
+        Thread.sleep(3000);
+        homePage.parcellab_filter_search_box.sendKeys(orderCode);
+        homePage.parcellab_search_btn.click();
+        int time;
+        String str = "";
+        for (time = 1; time < 25; time++) {
+            Thread.sleep(2000);
+            List<WebElement> element = Driver.getDriver().findElements(By.xpath("//div[@class='container-fluid']"));
+            Thread.sleep(1000);
+            for (WebElement s : element) {
+                str = s.getText();
+            }
+            if (!str.contains(orderCode)) {
+                Thread.sleep(8000);
+                Driver.getDriver().navigate().refresh();
+                Thread.sleep(1000);
+            } else {
+                Thread.sleep(2000);
+                Assert.assertTrue(str.contains(orderCode));
+                Assert.assertTrue(str.contains(alConsignmentCode1));
+                Assert.assertTrue(str.contains(alConsignmentCode2));
+                break;
+
+            }
+        }
+
+
+    }
+
+    @When("navigate to delivery information of Parcellab3")
+    public void navigate_to_delivery_information_of_parcellab3() throws InterruptedException {
+        // #click on "track delivery"
+        // #pop up is displayed
+
+        homePage.parcellab_kundenPopup_btn.click();
+        Thread.sleep(4000);
+        WebElement popup = wait.until(ExpectedConditions.visibilityOf(
+                Driver.getDriver().findElement(By.xpath("//div[(text()='" + orderCode + "')]"))));
+        Assert.assertTrue(popup.isDisplayed());
+        Driver.getDriver().navigate().refresh();
+    }
+
+    @Then("check delivery information pop up of ParcelLab3")
+    public void check_delivery_information_pop_up_of_parcel_lab3() throws InterruptedException {
+
+        //   #Popup is displayed
+        //   #Popup is displayed centered on Desktop
+        //   #the popup/page is correctly displayed
+        Thread.sleep(2000);
+        Assert.assertTrue(homePage.parcellab_tracking_link.isDisplayed());
+        Assert.assertTrue(homePage.parcellab_tracking_link.isEnabled());
+        Assert.assertTrue(homePage.parcellab_carrier_link.isDisplayed());
+        Assert.assertTrue(homePage.parcellab_carrier_link.isEnabled());
+        Assert.assertTrue(homePage.parcellab_publik_link.isDisplayed());
+        Assert.assertTrue(homePage.parcellab_publik_link.isEnabled());
+    }
+
+    @Then("check shipping confirmation mail from Parcellab3")
+    public void check_shipping_confirmation_mail_from_parcellab3() throws InterruptedException {
+        //   #The shipping mail is sent
+        Thread.sleep(8000);
+        Driver.getDriver().navigate().refresh();
+        for (int i = 1; i < 50; i++) {
+            Thread.sleep(2000);
+            if (!homePage.parcellab_email_body.getText().contains("unterwegs")) {
+                Thread.sleep(30000);
+                Driver.getDriver().navigate().refresh();
+            } else {
+                break;
+            }
+        }
+        Assert.assertTrue(homePage.parcellab_email_message.isEnabled());
+        Assert.assertTrue(homePage.parcellab_email_message.isEnabled());
+        Assert.assertTrue(homePage.parcellab_email_message.getText().contains("Deine Bestellung ist unterwegs"));
+        emailPage.trash_mail_verify("unterwegs");
+
+    }
+
+    @When("navigate to delivery information popup_page in AECshop3")
+    public void navigate_to_delivery_information_popup_page_in_ae_cshop3() {
+        //  #click on track deliveryclick on track delivery
+        //      #the popup/page is displayed
+
+        Driver.getDriver().get(ConfigurationReader.getProperty("AEC_SHOP_URL"));
+        wait.until(ExpectedConditions.visibilityOf(homePage.kontakt_btn));
+        homePage.kontoanmelden_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(homePage.login_bestelnummerEingeben_box));
+        homePage.login_bestelnummerEingeben_box.sendKeys(orderCode);
+        homePage.login_postleitzahlEingeben_box.sendKeys(ConfigurationReader.getProperty("AEC_GUEST_POSTALCODE"));
+        homePage.weiter.click();
+        wait.until(ExpectedConditions.visibilityOf(homePage.zweiConsignmentErsteLieferung_Verfolgung_btn));
+    }
+
+    @Then("check delivery information popup_page in AECshop3")
+    public void check_delivery_information_popup_page_in_ae_cshop3() {
+        //   #Tracking Snippet with delivery information from ParcelLab is Displayfeld
+        //      #The current offer component is displayed
+        //      #the popup/page is correctly displayed
+
+        Assert.assertTrue(homePage.imShopParcellabStatus_vollstandingZugestelt.isDisplayed());
+        Assert.assertTrue(homePage.imShopParcellabStatus_vollstandingZugestelt.getText().contains("Vollständig zugestellt"));
+        Assert.assertTrue(homePage.zweiConsignmentZweiteLieferung_Verfolgung_btn.isDisplayed());
+        Assert.assertTrue(homePage.zweiConsignmentErsteLieferung_Verfolgung_btn.isDisplayed());
+        homePage.zweiConsignmentErsteLieferung_Verfolgung_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(homePage.bestellungVerarbeitet_pubhub));
+        Assert.assertTrue(homePage.bestellungVerarbeitet_pubhub.isDisplayed());
+        Assert.assertTrue(homePage.bestellungVerarbeitet_pubhub.getText().contains("Bestellung verarbeitet"));
+        homePage.sendungVerfolgenPubhub_schliessen_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(homePage.zweiConsignmentZweiteLieferung_Verfolgung_btn));
+        homePage.zweiConsignmentZweiteLieferung_Verfolgung_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(homePage.bestellungVerarbeitet_pubhub));
+        Assert.assertTrue(homePage.bestellungVerarbeitet_pubhub.isDisplayed());
+        Assert.assertTrue(homePage.bestellungVerarbeitet_pubhub.getText().contains("Bestellung verarbeitet"));
+
+    }
+
+
+}
+
+-----------------------------------------------------------------------------------------------------
+package stepdefinitions.desktop;
+
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
+import io.restassured.http.ContentType;
+import io.restassured.path.json.JsonPath;
+import io.restassured.response.Response;
+import org.junit.Assert;
+import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.FluentWait;
+import org.openqa.selenium.support.ui.Wait;
+import pages.desktop.Bestellung;
+import pages.desktop.EmailPage;
+import pages.desktop.HomePage;
+import pages.desktop.TokenPage;
+import utilities.ConfigurationReader;
+import utilities.desktop.Driver;
+
+import java.io.UnsupportedEncodingException;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Random;
+
+import static io.restassured.RestAssured.given;
+
+public class RTB_QAT_863_CustomerCreateOrder_asGuest_containsTwoProducts_shipped_delivered_asTwoShipmentsTwoPackage_each {
+
+    TokenPage tokenPage = new TokenPage();
+    Bestellung bestellung = new Bestellung();
+    EmailPage emailPage = new EmailPage();
+    HomePage homePage = new HomePage();
+    Wait<WebDriver> wait = new FluentWait<WebDriver>(Driver.getDriver())
+            .withTimeout(Duration.ofSeconds(10L))
+            .pollingEvery(Duration.ofSeconds(2L))
+            .ignoring(NoSuchElementException.class);
+
+    static String orderCode;
+    String random_trackingID;
+    String vendorConsignmentCode;
+    String vendorPackageCode;
+    String alConsignmentCode1;
+
+
+    @Given("Zwei Produkte mit zweien Package für Status DELIVERED bestellen")
+    public void zwei_produkte_mit_zweien_package_für_status_delivered_bestellen() throws InterruptedException {
+        bestellung.emailErstellen_zwei_medionDE_ProduktAlsGast_bestellen();
+        orderCode = bestellung.bestellnummer;
+        Thread.sleep(5000);
+    }
+
+    @Given("Zwei Produkte mit zweien Package Status READY setzen")
+    public void zwei_produkte_mit_zweien_package_status_ready_setzen() throws InterruptedException, UnsupportedEncodingException {
+        Thread.sleep(2000);
+        //     Token genieren
+        tokenPage.accessToken();
+        //      Abruf Einer Bestellung
+        String endpoint;
+        if (ConfigurationReader.getProperty("AEC_SHOP_URL").contains("https://www-aec-s1.preprod.an-cms.com/")) {
+            endpoint = "https://alvendorwebservices.co6hnkccbu-aldtpla2-s1-public.model-t.cc.commerce.ondemand.com/alvendorwebservices/2.0/DE/vendor/";
+        } else {
+            endpoint = "https://alvendorwebservices.co6hnkccbu-altpla2-s2-public.model-t.cc.commerce.ondemand.com/alvendorwebservices/2.0/DE/vendor/";
+        }
+
+        Thread.sleep(7000);
+        Response response7 = given().auth().oauth2(tokenPage.token)
+                .accept(ContentType.JSON).
+                contentType(ContentType.JSON).when()
+                .get(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode);
+
+        // System.out.println("########## Ready    ########################");
+        Thread.sleep(1000);
+        Assert.assertTrue(response7.statusCode() == 200 || response7.statusCode() == 201);             //StatusCode überprüfen
+        String expected_orderCode = "[" + orderCode + "]";                                                         //      Frontend Bestellnummer
+        JsonPath jsonPath = response7.jsonPath();
+        Assert.assertEquals("orderCode ist nicht identisch", expected_orderCode, jsonPath.get("orders.code").toString());  //Backend orderCode
+
+        //  POST====>Erzeugung von Lieferung mit zweien Packages
+        //expectedDelivery date generiern
+        int min = 100000000;                                                                   //zufällig vendorConsignmentCode und trackingID erstellen
+        int max = 990000000;
+        int min1 = 100000000;
+        int max1 = 990000000;
+        int random0 = (int) Math.floor(Math.random() * (max - min + 1) + min);
+        random_trackingID = random0 + "975";
+        int random2 = (int) Math.floor(Math.random() * (max1 - min1 + 1) + min1);
+        Random random = new Random();
+        char randomchar = (char) (random.nextInt(26) + 'A');
+        vendorConsignmentCode = "" + randomchar + random2 + randomchar + randomchar;
+        vendorPackageCode = "" + orderCode;
+        Response response9 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"DHL\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 1,\n" +
+                        "          \"quantity\": 1,\n" +
+                        "        \"packageEntries\": [\n" +
+                        "          {\n" +
+                        "            \"status\": \"READY\",\n" +
+                        "            \"statusText\": \"READY\",\n" +
+                        "            \"vendorPackageCode\": \"" + vendorPackageCode + "-1\"\n" +
+                        "          }\n" +
+                        "        ]\n" +
+                        "      \n" +
+                        "      }\n" +
+                        "    ],\n" +
+                        "      \"shippingAddress\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"type\": \"DEFAULT\"\n" +
+                        "    },\n" +
+                        "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "-1\"\n" +
+                        "  }\n" +
+                        "]\n"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+        Assert.assertTrue(response9.statusCode() == 200 || response9.statusCode() == 201);              // Statuscode überprüfen
+        // System.out.println("###########  Ready1  ##################### ");
+        Response response8 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 2,\n" +
+                        "          \"quantity\": 1,\n" +
+                        "        \"packageEntries\": [\n" +
+                        "          {\n" +
+                        "            \"status\": \"READY\",\n" +
+                        "            \"statusText\": \"READY\",\n" +
+                        "            \"vendorPackageCode\": \"" + vendorPackageCode + "-2\"\n" +
+                        "          }\n" +
+                        "        ]\n" +
+                        "      \n" +
+                        "      }\n" +
+                        "    ],\n" +
+                        "      \"shippingAddress\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"type\": \"DEFAULT\"\n" +
+                        "    },\n" +
+                        "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "-2\"\n" +
+                        "  }\n" +
+                        "]\n"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+
+        Assert.assertTrue(response8.statusCode() == 200 || response8.statusCode() == 201);
+        Thread.sleep(2000);// Statuscode überprüfen
+        //System.out.println("###########  Ready2  ##################### ");
+    }
+
+    @Given("Zwei Produkte mit zweien Package Status SHIPPED setzen")
+    public void zwei_produkte_mit_zweien_package_status_shipped_setzen() throws InterruptedException {
+        Thread.sleep(2000);
+        String endpoint;
+        if (ConfigurationReader.getProperty("AEC_SHOP_URL").contains("https://www-aec-s1.preprod.an-cms.com/")) {
+            endpoint = "https://alvendorwebservices.co6hnkccbu-altpla2-s1-public.model-t.cc.commerce.ondemand.com/alvendorwebservices/2.0/DE/vendor/";
+        } else {
+            endpoint = "https://alvendorwebservices.co6hnkccbu-altpla2-s2-public.model-t.cc.commerce.ondemand.com/alvendorwebservices/2.0/DE/vendor/";
+        }
+
+        Thread.sleep(3000);
+
+
+        LocalDate date = LocalDate.now();                                                             //expectedDelivery date generiern
+        //POST==> Erzeugung von Lieferung status SHIPPED
+        Response response2 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"DHL\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 1,\n" +
+                        "        \"packageEntries\": [\n" +
+                        "           {\n" +
+                        "            \"shippingDate\": \"" + date + "\",\n" +
+                        "            \"status\": \"SHIPPED\",\n" +
+                        "            \"statusText\": \"versendet\",\n" +
+
+                        "            \"trackingLink\": \"https://trackingLink.de\",\n" +
+                        "            \"vendorPackageCode\": \"" + vendorPackageCode + "-1\"\n" +
+                        "          }\n" +
+                        "          ],\n" +
+                        "        \"quantity\": 1\n" +
+                        "      }\n" +
+                        "    ],\n" +
+                        "      \"shippingAddress\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"firstName\": \"string\",\n" +
+                        "      \"lastName\": \"string\",\n" +
+                        "      \"packstationNumber\": \"string\",\n" +
+                        "      \"postNumber\": \"string\",\n" +
+                        "      \"postOfficeNumber\": \"string\",\n" +
+                        "      \"postalCode\": \"string\",\n" +
+                        "      \"remarks\": \"string\",\n" +
+                        "      \"salutationCode\": \"MR\",\n" +
+                        "      \"streetName\": \"string\",\n" +
+                        "      \"streetNumber\": \"string\",\n" +
+                        "      \"town\": \"string\",\n" +
+                        "      \"type\": \"DEFAULT\"\n" +
+                        "    },\n" +
+                        "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "-1\"\n" +
+                        "  }\n" +
+                        "]"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+        //System.out.println("................SHIPPED1 response...............");
+        Assert.assertTrue(response2.statusCode() == 200 || response2.statusCode() == 201);  // Statuscode überprüfen
+        Thread.sleep(2000);
+        Response response3 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 2,\n" +
+                        "        \"packageEntries\": [\n" +
+                        "           {\n" +
+                        "            \"shippingDate\": \"" + date + "\",\n" +
+                        "            \"status\": \"SHIPPED\",\n" +
+                        "            \"statusText\": \"versendet\",\n" +
+                        "            \"trackingId\": \"" + random_trackingID + "\",\n" +
+                        "            \"trackingLink\": \"https://trackingLink.de\",\n" +
+                        "            \"vendorPackageCode\": \"" + vendorPackageCode + "-2\"\n" +
+                        "          }\n" +
+                        "          ],\n" +
+                        "        \"quantity\": 1\n" +
+                        "      }\n" +
+                        "    ],\n" +
+                        "      \"shippingAddress\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"firstName\": \"string\",\n" +
+                        "      \"lastName\": \"string\",\n" +
+                        "      \"packstationNumber\": \"string\",\n" +
+                        "      \"postNumber\": \"string\",\n" +
+                        "      \"postOfficeNumber\": \"string\",\n" +
+                        "      \"postalCode\": \"string\",\n" +
+                        "      \"remarks\": \"string\",\n" +
+                        "      \"salutationCode\": \"MR\",\n" +
+                        "      \"streetName\": \"string\",\n" +
+                        "      \"streetNumber\": \"string\",\n" +
+                        "      \"town\": \"string\",\n" +
+                        "      \"type\": \"DEFAULT\"\n" +
+                        "    },\n" +
+                        "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "-2\"\n" +
+                        "  }\n" +
+                        "]"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+        // System.out.println(" ...............SHIPPED2 response...............");
+        Assert.assertTrue(response3.statusCode() != 200 && response3.statusCode() != 201);              // Statuscode überprüfen
+        Thread.sleep(7000);
+
+    }
+
+    @Given("Zwei Produkte mit zweien Package Status DELIVERED setzen")
+    public void zwei_produkte_mit_zweien_package_status_delivered_setzen() throws InterruptedException {
+        Thread.sleep(2000);
+        String endpoint;
+        if (ConfigurationReader.getProperty("AEC_SHOP_URL").contains("https://www-aec-s1.preprod.an-cms.com/")) {
+            endpoint = "https://alvendorwebservices.co6hnkccbu-altpla2-s1-public.model-t.cc.commerce.ondemand.com/alvendorwebservices/2.0/DE/vendor/";
+        } else {
+            endpoint = "https://alvendorwebservices.co6hnkccbu-altpla2-s2-public.model-t.cc.commerce.ondemand.com/alvendorwebservices/2.0/DE/vendor/";
+        }
+
+        Thread.sleep(3000);
+        LocalDate date = LocalDate.now();                                                             //expectedDelivery date generiern
+        //POST==> Erzeugung von Lieferung status SHIPPED
+        Response response2 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"DHL\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 1,\n" +
+                        "        \"quantity\": 1,\n" +
+                        "        \"packageEntries\": [\n" +
+                        "          {\n" +
+                        "                  \"vendorPackageCode\": \"" + vendorPackageCode + "-1\",\n" +
+                        "                  \"statusText\": \"Parcel is out for delivery\",\n" +
+
+                        "                  \"trackingLink\": \"https://trackingLink.de\",\n" +
+                        "                  \"shippingDate\": \"" + date + "\",\n" +
+                        "                  \"status\": \"DELIVERED\",\n" +
+                        "                  \"receiptDelivery\": \"" + date + "\"\n" +
+                        "                }\n" +
+                        "        ]\n" +
+                        "        \n" +
+                        "      }\n" +
+                        "    ],    \n" +
+                        "      \"shippingAddress\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"type\": \"DEFAULT\"\n" +
+                        "    },\n" +
+                        "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "-1\"\n" +
+                        "  }\n" +
+                        "]"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+        // System.out.println("................DELIVERED1 response...............");
+        Assert.assertTrue(response2.statusCode() == 200 || response2.statusCode() == 201);  // Statuscode überprüfen
+        Thread.sleep(2000);
+        Response response3 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 2,\n" +
+                        "        \"quantity\": 1,\n" +
+                        "        \"packageEntries\": [\n" +
+                        "          {\n" +
+                        "                  \"vendorPackageCode\": \"" + vendorPackageCode + "-2\",\n" +
+                        "                  \"statusText\": \"Parcel is out for delivery\",\n" +
+                        "                  \"trackingId\": \"" + random_trackingID + "\",\n" +
+                        "                  \"trackingLink\": \"https://trackingLink.de\",\n" +
+                        "                  \"shippingDate\": \"" + date + "\",\n" +
+                        "                  \"status\": \"DELIVERED\",\n" +
+                        "                  \"receiptDelivery\": \"" + date + "\"\n" +
+                        "                }\n" +
+                        "        ]\n" +
+                        "        \n" +
+                        "      }\n" +
+                        "    ],    \n" +
+                        "      \"shippingAddress\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"type\": \"DEFAULT\"\n" +
+                        "    },\n" +
+                        "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "-2\"\n" +
+                        "  }\n" +
+                        "]"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+        // System.out.println(" ..................DELIVERED2 ...............");
+        Assert.assertTrue(response3.statusCode() != 200 && response3.statusCode() != 201);              // Statuscode überprüfen
+        Thread.sleep(2000);
+        JsonPath jsonPath = response3.jsonPath();
+        String expected_orderCode = "[Der Carrier darf nicht leer sein, wenn der Status einer Lieferung größer als READY ist.]";
+        Assert.assertEquals("Errormessage ist nicht identisch", expected_orderCode, jsonPath.get("errors.message").toString());//Backend orderCode
+        JsonPath jsonPath2 = response2.jsonPath();
+        String ConsignmentCode1 = jsonPath2.get("consignments.consignment.alConsignmentCode").toString();
+        alConsignmentCode1 = ConsignmentCode1.substring(1, ConsignmentCode1.length() - 1);
+
+    }
+
+    @Given("Zwei Produkte mit zweien Package Bestellnummer eingeben und Bestellung überprüfen")
+    public void zwei_produkte_mit_zweien_package_bestellnummer_eingeben_und_bestellung_überprüfen() throws InterruptedException {
+        Thread.sleep(3000);
+        homePage.parcellab_filter_search_box.sendKeys(orderCode);
+        homePage.parcellab_search_btn.click();
+        int time;
+        String str = "";
+        for (time = 1; time < 35; time++) {
+            Thread.sleep(2000);
+            List<WebElement> element = Driver.getDriver().findElements(By.xpath("//div[@class='container-fluid']"));
+            Thread.sleep(1000);
+            for (WebElement s : element) {
+                str = s.getText();
+
+            }
+            if (!str.contains(orderCode)) {
+                Thread.sleep(10000);
+                Driver.getDriver().navigate().refresh();
+                Thread.sleep(1000);
+            } else {
+                Thread.sleep(2000);
+                Assert.assertTrue(str.contains(orderCode));
+                break;
+
+            }
+            Assert.assertTrue(str.contains(orderCode));
+            Assert.assertTrue(str.contains(alConsignmentCode1));
+        }
+
+    }
+
+    @When("navigate to delivery information of Parcellab4")
+    public void navigate_to_delivery_information_of_parcellab4() throws InterruptedException {
+        // #click on "track delivery"
+        // #pop up is displayed
+        homePage.parcellab_kundenPopup_btn.click();
+        Thread.sleep(4000);
+        WebElement popup = wait.until(ExpectedConditions.visibilityOf(
+                Driver.getDriver().findElement(By.xpath("//div[(text()='" + orderCode + "')]"))));
+        Assert.assertTrue(popup.isDisplayed());
+        Driver.getDriver().navigate().refresh();
+    }
+
+    @Then("check delivery information pop up of ParcelLab4")
+    public void check_delivery_information_pop_up_of_parcel_lab4() throws InterruptedException {
+
+        //   #Popup is displayed
+        //   #Popup is displayed centered on Desktop
+        //   #the popup/page is correctly displayed
+        Thread.sleep(2000);
+        Assert.assertTrue(homePage.parcellab_tracking_link.isDisplayed());
+        Assert.assertTrue(homePage.parcellab_tracking_link.isEnabled());
+        Assert.assertTrue(homePage.parcellab_carrier_link.isDisplayed());
+        Assert.assertTrue(homePage.parcellab_carrier_link.isEnabled());
+        Assert.assertTrue(homePage.parcellab_publik_link.isDisplayed());
+        Assert.assertTrue(homePage.parcellab_publik_link.isEnabled());
+    }
+
+    @Then("check shipping confirmation mail from Parcellab4")
+    public void check_shipping_confirmation_mail_from_parcellab4() throws InterruptedException {
+        //   #The shipping mail is sent
+        Thread.sleep(8000);
+        Driver.getDriver().navigate().refresh();
+        for (int i = 1; i < 60; i++) {
+            Thread.sleep(2000);
+            if (!homePage.parcellab_email_body.getText().contains("unterwegs")) {
+                Thread.sleep(22000);
+                Driver.getDriver().navigate().refresh();
+            } else {
+                break;
+            }
+        }
+        Assert.assertTrue(homePage.parcellab_email_message.isEnabled());
+        Assert.assertTrue(homePage.parcellab_email_message.isEnabled());
+        Assert.assertTrue(homePage.parcellab_email_message.getText().contains("Deine Bestellung ist unterwegs"));
+        emailPage.trash_mail_verify("unterwegs");
+
+    }
+
+    @When("navigate to delivery information popup_page in AECshop4")
+    public void navigate_to_delivery_information_popup_page_in_ae_cshop4() {
+        //  #click on track deliveryclick on track delivery
+        //      #the popup/page is displayed
+
+        Driver.getDriver().get(ConfigurationReader.getProperty("AEC_SHOP_URL"));
+        wait.until(ExpectedConditions.visibilityOf(homePage.kontakt_btn));
+        homePage.kontoanmelden_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(homePage.login_bestelnummerEingeben_box));
+        homePage.login_bestelnummerEingeben_box.sendKeys(orderCode);
+        homePage.login_postleitzahlEingeben_box.sendKeys(ConfigurationReader.getProperty("AEC_GUEST_POSTALCODE"));
+        homePage.weiter.click();
+        wait.until(ExpectedConditions.visibilityOf(homePage.imShopParcellabStatus_inBearbeitung));
+    }
+
+    @Then("check delivery information popup_page in AECshop4")
+    public void check_delivery_information_popup_page_in_ae_cshop4() {
+        //   #Tracking Snippet with delivery information from ParcelLab is Displayfeld
+        //      #The current offer component is displayed
+        //      #the popup/page is correctly displayed
+
+        Assert.assertTrue(homePage.imShopParcellabStatus_inBearbeitung.isDisplayed());
+        Assert.assertTrue(homePage.imShopParcellabStatus_inBearbeitung.getText().contains("In Bearbeitung"));
+        Assert.assertTrue(homePage.imShopParcellabStatusVonEinemProdukt_vollstandingZugestelt_message.isDisplayed());
+        Assert.assertTrue(homePage.imShopParcellabStatusVonEinemProdukt_vollstandingZugestelt_message.getText().
+                contains("Vollständig zugestellt am"));
+        Assert.assertFalse(Driver.getDriver().findElement(
+                By.xpath("(//div[@class='col-xs-8 col-md-6 col-lg-5'])[2]")).getText().contains("Artikel zurücksenden"));
+
+    }
+}
+-----------------------------------------------------------------------------------------------------------------------------------
+
+
+package stepdefinitions.desktop;
+
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.cucumber.java.en.When;
+import io.restassured.http.ContentType;
+import io.restassured.path.json.JsonPath;
+import io.restassured.response.Response;
+import org.junit.Assert;
+import org.openqa.selenium.By;
+import org.openqa.selenium.NoSuchElementException;
+import org.openqa.selenium.WebDriver;
+import org.openqa.selenium.WebElement;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+import org.openqa.selenium.support.ui.FluentWait;
+import org.openqa.selenium.support.ui.Wait;
+import pages.desktop.Bestellung;
+import pages.desktop.EmailPage;
+import pages.desktop.HomePage;
+import pages.desktop.TokenPage;
+import utilities.ConfigurationReader;
+import utilities.desktop.Driver;
+
+import java.io.UnsupportedEncodingException;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.util.List;
+import java.util.Random;
+
+import static io.restassured.RestAssured.given;
+
+public class RTB_QAT_879_CustomerCreateOrder_asGuest_twoProducts_shipped_delivered_twoShipments_onePackage {
+
+    TokenPage tokenPage = new TokenPage();
+    Bestellung bestellung = new Bestellung();
+    EmailPage emailPage = new EmailPage();
+    HomePage homePage = new HomePage();
+    Wait<WebDriver> wait = new FluentWait<WebDriver>(Driver.getDriver())
+            .withTimeout(Duration.ofSeconds(10L))
+            .pollingEvery(Duration.ofSeconds(2L))
+            .ignoring(NoSuchElementException.class);
+
+    static String orderCode;
+    static String random_trackingID1;
+    static String vendorConsignmentCode;
+    static String vendorPackageCode;
+    static Response response10;
+    static Response response11;
+    static JsonPath jsonPath10;
+    static JsonPath jsonPath11;
+    static String alConsignmentCode10;
+    static String alConsignmentCode11;
+
+
+    @Given("Zwei Produkte mit einem Package für Status DELIVERED bestellen")
+    public void zwei_produkte_mit_einem_package_für_status_delivered_bestellen() throws InterruptedException {
+        bestellung.emailErstellen_zwei_medionDE_ProduktAlsGast_bestellen();
+        orderCode = bestellung.bestellnummer;
+        Thread.sleep(5000);
+
+    }
+
+    @Given("Zwei Produkte mit einem Package1 Status READY setzen")
+    public void zwei_produkte_mit_einem_package1_status_ready_setzen() throws InterruptedException, UnsupportedEncodingException {
+
+        Thread.sleep(2000);
+        //     Token genieren
+
+        tokenPage.accessToken();
+        //      Abruf Einer Bestellung
+        String endpoint;
+        if (ConfigurationReader.getProperty("AEC_SHOP_URL").contains("https://www-aec-s1.preprod.an-cms.com/")) {
+            endpoint = "https://alvendorwebservices.co6hnkccbu-altpla2-s1-public.model-t.cc.commerce.ondemand.com/alvendorwebservices/2.0/DE/vendor/";
+        } else {
+            endpoint = "https://alvendorwebservices.co6hnkccbu-altpla2-s2-public.model-t.cc.commerce.ondemand.com/alvendorwebservices/2.0/DE/vendor/";
+        }
+
+        Thread.sleep(7000);
+        Response response7 = given().auth().oauth2(tokenPage.token)
+                .accept(ContentType.JSON).
+                contentType(ContentType.JSON).when()
+                .get(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode);
+
+
+        // System.out.println("########## Ready    ########################");
+        Assert.assertTrue(response7.statusCode() == 200 || response7.statusCode() == 201);             //StatusCode �berpr�fen
+        String expected_orderCode = "[" + orderCode + "]";                                                         //      Frontend Bestellnummer
+        JsonPath jsonPath = response7.jsonPath();
+        Assert.assertEquals("orderCode ist nicht identisch", expected_orderCode, jsonPath.get("orders.code").toString());  //Backend orderCode
+
+        //  POST====>Erzeugung von Lieferung mit zweien Packages
+        //expectedDelivery date generiern
+        int min = 100000000;                                    //zuf�llig vendorConsignmentCode und trackingID erstellen
+        int max = 990000000;
+        int min1 = 100000000;
+        int max1 = 990000000;
+        int random0 = (int) Math.floor(Math.random() * (max - min + 1) + min);
+        random_trackingID1 = random0 + "975";
+        int random2 = (int) Math.floor(Math.random() * (max1 - min1 + 1) + min1);
+        Random random = new Random();
+        char randomchar = (char) (random.nextInt(26) + 'A');
+        vendorConsignmentCode = "" + randomchar + random2 + randomchar + randomchar;
+        vendorPackageCode = "" + orderCode;
+        Response response9 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"DHL\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 1,\n" +
+                        "          \"quantity\": 1,\n" +
+                        "        \"packageEntries\": [\n" +
+                        "          {\n" +
+                        "            \"status\": \"READY\",\n" +
+                        "            \"statusText\": \"READY\",\n" +
+                        "            \"vendorPackageCode\": \"" + vendorPackageCode + "-1\"\n" +
+                        "          }\n" +
+                        "        ]\n" +
+                        "      \n" +
+                        "      }\n" +
+                        "    ],\n" +
+                        "      \"shippingAddress\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"type\": \"DEFAULT\"\n" +
+                        "    },\n" +
+                        "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "-1\"\n" +
+                        "  }\n" +
+                        "]\n"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+        Assert.assertTrue(response9.statusCode() == 200 || response9.statusCode() == 201);              // Statuscode �berpr�fen
+        //System.out.println("###########  Ready1  ##################### ");
+        Response response8 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 2,\n" +
+                        "          \"quantity\": 1,\n" +
+                        "        \"packageEntries\": [\n" +
+                        "          {\n" +
+                        "            \"status\": \"READY\",\n" +
+                        "            \"statusText\": \"READY\",\n" +
+                        "            \"vendorPackageCode\": \"" + vendorPackageCode + "-1\"\n" +
+                        "          }\n" +
+                        "        ]\n" +
+                        "      \n" +
+                        "      }\n" +
+                        "    ],\n" +
+                        "      \"shippingAddress\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"type\": \"DEFAULT\"\n" +
+                        "    },\n" +
+                        "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "-2\"\n" +
+                        "  }\n" +
+                        "]\n"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+
+        Assert.assertTrue(response8.statusCode() == 200 || response8.statusCode() == 201);              // Statuscode �berpr�fen
+        // System.out.println("###########  Ready2  ##################### ");
+
+    }
+
+    @Given("Zwei Produkte mit einem Package1 Status SHIPPED setzen")
+    public void zwei_produkte_mit_einem_package1_status_shipped_setzen() throws InterruptedException {
+
+        Thread.sleep(4000);
+        String endpoint;
+        if (ConfigurationReader.getProperty("AEC_SHOP_URL").contains("https://www-aec-s1.preprod.an-cms.com/")) {
+            endpoint = "https://alvendorwebservices.co6hnkccbu-altpla2-s1-public.model-t.cc.commerce.ondemand.com/alvendorwebservices/2.0/DE/vendor/";
+        } else {
+            endpoint = "https://alvendorwebservices.co6hnkccbu-altpla2-s2-public.model-t.cc.commerce.ondemand.com/alvendorwebservices/2.0/DE/vendor/";
+        }
+        Thread.sleep(3000);
+        LocalDate date = LocalDate.now();                                                             //expectedDelivery date generiern
+        //POST==> Erzeugung von Lieferung status SHIPPED
+        Response response2 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"DHL\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 1,\n" +
+                        "        \"packageEntries\": [\n" +
+                        "           {\n" +
+                        "            \"shippingDate\": \"" + date + "\",\n" +
+                        "            \"status\": \"SHIPPED\",\n" +
+                        "            \"statusText\": \"versendet\",\n" +
+
+                        "            \"trackingLink\": \"https://trackingLink.de\",\n" +
+                        "            \"vendorPackageCode\": \"" + vendorPackageCode + "-1\"\n" +
+                        "          }\n" +
+                        "          ],\n" +
+                        "        \"quantity\": 1\n" +
+                        "      }\n" +
+                        "    ],\n" +
+                        "      \"shippingAddress\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"firstName\": \"string\",\n" +
+                        "      \"lastName\": \"string\",\n" +
+                        "      \"packstationNumber\": \"string\",\n" +
+                        "      \"postNumber\": \"string\",\n" +
+                        "      \"postOfficeNumber\": \"string\",\n" +
+                        "      \"postalCode\": \"string\",\n" +
+                        "      \"remarks\": \"string\",\n" +
+                        "      \"salutationCode\": \"MR\",\n" +
+                        "      \"streetName\": \"string\",\n" +
+                        "      \"streetNumber\": \"string\",\n" +
+                        "      \"town\": \"string\",\n" +
+                        "      \"type\": \"DEFAULT\"\n" +
+                        "    },\n" +
+                        "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "-1\"\n" +
+                        "  }\n" +
+                        "]"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+        // System.out.println("................SHIPPED1 response...............");
+        Assert.assertTrue(response2.statusCode() == 200 || response2.statusCode() == 201);              // Statuscode �berpr�fen
+        Response response3 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"DHL\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 2,\n" +
+                        "        \"packageEntries\": [\n" +
+                        "           {\n" +
+                        "            \"shippingDate\": \"" + date + "\",\n" +
+                        "            \"status\": \"SHIPPED\",\n" +
+                        "            \"statusText\": \"versendet\",\n" +
+                        "            \"trackingId\": \"" + random_trackingID1 + "\",\n" +
+                        "            \"trackingLink\": \"https://trackingLink.de\",\n" +
+                        "            \"vendorPackageCode\": \"" + vendorPackageCode + "-1\"\n" +
+                        "          }\n" +
+                        "          ],\n" +
+                        "        \"quantity\": 1\n" +
+                        "      }\n" +
+                        "    ],\n" +
+                        "      \"shippingAddress\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"firstName\": \"string\",\n" +
+                        "      \"lastName\": \"string\",\n" +
+                        "      \"packstationNumber\": \"string\",\n" +
+                        "      \"postNumber\": \"string\",\n" +
+                        "      \"postOfficeNumber\": \"string\",\n" +
+                        "      \"postalCode\": \"string\",\n" +
+                        "      \"remarks\": \"string\",\n" +
+                        "      \"salutationCode\": \"MR\",\n" +
+                        "      \"streetName\": \"string\",\n" +
+                        "      \"streetNumber\": \"string\",\n" +
+                        "      \"town\": \"string\",\n" +
+                        "      \"type\": \"DEFAULT\"\n" +
+                        "    },\n" +
+                        "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "-2\"\n" +
+                        "  }\n" +
+                        "]"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+        // System.out.println(" ...............SHIPPED2 response...............");
+        Assert.assertTrue(response3.statusCode() == 200 || response3.statusCode() == 201);  // Statuscode �berpr�fen
+        Thread.sleep(7000);
+
+    }
+
+    @Given("Zwei Produkte mit einem Package1 Status DELIVERED setzen")
+    public void zwei_produkte_mit_einem_package1_status_delivered_setzen() throws InterruptedException {
+
+        Thread.sleep(2000);
+        String endpoint;
+        if (ConfigurationReader.getProperty("AEC_SHOP_URL").contains("https://www-aec-s1.preprod.an-cms.com/")) {
+            endpoint = "https://alvendorwebservices.co6hnkccbu-alpla2-s1-public.model-t.cc.commerce.ondemand.com/avendorwebservices/2.0/DE/vendor/";
+        } else {
+            endpoint = "https://alndorwebservices.co6hnkccbu-altpla2-s2-public.model-t.cc.commerce.ondemand.com/alendorwebservices/2.0/DE/vendor/";
+        }
+
+        Thread.sleep(3000);
+        LocalDate date = LocalDate.now();                                                             //expectedDelivery date generiern
+        //POST==> Erzeugung von Lieferung status DELIVERED
+        response10 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"DHL\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 1,\n" +
+                        "        \"quantity\": 1,\n" +
+                        "        \"packageEntries\": [\n" +
+                        "          {\n" +
+                        "                  \"vendorPackageCode\": \"" + vendorPackageCode + "-1\",\n" +
+                        "                  \"statusText\": \"Parcel is out for delivery\",\n" +
+
+                        "                  \"trackingLink\": \"https://trackingLink.de\",\n" +
+                        "                  \"shippingDate\": \"" + date + "\",\n" +
+                        "                  \"status\": \"DELIVERED\",\n" +
+                        "                  \"receiptDelivery\": \"" + date + "\"\n" +
+                        "                }\n" +
+                        "        ]\n" +
+                        "        \n" +
+                        "      }\n" +
+                        "    ],    \n" +
+                        "      \"shippingAddress\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"type\": \"DEFAULT\"\n" +
+                        "    },\n" +
+                        "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "-1\"\n" +
+                        "  }\n" +
+                        "]"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+        // System.out.println("................DELIVERED1 response...............");
+        Assert.assertTrue(response10.statusCode() == 200 || response10.statusCode() == 201);              // Statuscode �berpr�fen
+        response11 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"DHL\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 2,\n" +
+                        "        \"quantity\": 1,\n" +
+                        "        \"packageEntries\": [\n" +
+                        "          {\n" +
+                        "                  \"vendorPackageCode\": \"" + vendorPackageCode + "-1\",\n" +
+                        "                  \"statusText\": \"Parcel is out for delivery\",\n" +
+                        "                  \"trackingId\": \"" + random_trackingID1 + "\",\n" +
+                        "                  \"trackingLink\": \"https://trackingLink.de\",\n" +
+                        "                  \"shippingDate\": \"" + date + "\",\n" +
+                        "                  \"status\": \"DELIVERED\",\n" +
+                        "                  \"receiptDelivery\": \"" + date + "\"\n" +
+                        "                }\n" +
+                        "        ]\n" +
+                        "        \n" +
+                        "      }\n" +
+                        "    ],    \n" +
+                        "      \"shippingAddress\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"type\": \"DEFAULT\"\n" +
+                        "    },\n" +
+                        "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "-2\"\n" +
+                        "  }\n" +
+                        "]"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+        // System.out.println(" ..................DELIVERED2 ...............");
+        Assert.assertTrue(response11.statusCode() == 200 || response11.statusCode() == 201);              // Statuscode �berpr�fen
+        jsonPath10 = response10.jsonPath();
+        jsonPath11 = response11.jsonPath();
+
+    }
+
+    @Given("Zwei Produkte mit einem Package1 Bestellnummer eingeben und Bestellung überprüfen")
+    public void zwei_produkte_mit_einem_package1_bestellnummer_eingeben_und_bestellung_überprüfen() throws InterruptedException {
+        Thread.sleep(3000);
+        Thread.sleep(1000);
+        homePage.parcellab_filter_search_box.sendKeys(orderCode);
+        Thread.sleep(1000);
+        homePage.parcellab_search_btn.click();
+        Thread.sleep(2000);
+        int i;
+        String parcellab_such_ergebnis = "";
+        for (i = 1; i < 35; i++) {
+            Thread.sleep(2000);
+            List<WebElement> consignments = Driver.getDriver().findElements(
+                    By.xpath("//div[@class='row trackingStyle']"));
+            Thread.sleep(1000);
+            if (consignments.size() != 2) {
+                Thread.sleep(10000);
+                Driver.getDriver().navigate().refresh();
+                Thread.sleep(1000);
+            } else {
+                Assert.assertTrue(consignments.size() == 2);
+                for (WebElement s : consignments) {
+                    parcellab_such_ergebnis += s.getText().toString() + "-";
+                    Thread.sleep(2000);
+                }
+                break;
+            }
+
+        }
+        String str1 = jsonPath10.get("consignments.consignment.alConsignmentCode").toString();
+        Thread.sleep(1000);
+        String str2 = jsonPath11.get("consignments.consignment.alConsignmentCode").toString();
+        alConsignmentCode10 = str1.substring(1, str1.length() - 1);
+        alConsignmentCode11 = str2.substring(1, str2.length() - 1);
+        Assert.assertTrue(parcellab_such_ergebnis.contains(alConsignmentCode10));
+        Assert.assertTrue(parcellab_such_ergebnis.contains(alConsignmentCode11));
+
+
+    }
+
+    @When("navigate to delivery information of Parcellab5")
+    public void navigate_to_delivery_information_of_parcellab5() throws InterruptedException {
+        // #click on "track delivery"
+        // #pop up is displayed
+        homePage.parcellab_filter_search_box.clear();
+        Thread.sleep(1000);
+        homePage.parcellab_filter_search_box.sendKeys(alonsignmentCode10);
+        Thread.sleep(1000);
+        homePage.parcellab_search_btn.click();
+        Thread.sleep(2000);
+        int i;
+        String parcellab_such_ergebnis = "";
+        for (i = 1; i < 35; i++) {
+            Thread.sleep(2000);
+            List<WebElement> consignments = Driver.getDriver().findElements(By.xpath("//div[@class='row trackingStyle']"));
+            Thread.sleep(1000);
+            if (consignments.size() != 1) {
+                Thread.sleep(10000);
+                Driver.getDriver().navigate().refresh();
+                Thread.sleep(1000);
+            } else {
+                for (WebElement s : consignments) {
+                    parcellab_such_ergebnis = s.getText();
+                    Thread.sleep(2000);
+                }
+                break;
+            }
+
+        }
+
+        Assert.assertTrue(parcellab_such_ergebnis.contains(alConsignmentCode10));
+        Thread.sleep(1000);
+        WebElement ersteConsignment = Driver.getDriver().findElement(
+                By.xpath("(//div[@class='col-md-3'])[1]"));
+        ersteConsignment.click();
+        Thread.sleep(3000);
+        WebElement popup = wait.until(ExpectedConditions.visibilityOf(
+                Driver.getDriver().findElement(
+                        By.cssSelector("div.col-sm-12.col-md-4.same-h >div:nth-child(4)> div.col-lg-8"))));
+        Thread.sleep(2000);
+        Assert.assertTrue(popup.isDisplayed());
+        Thread.sleep(1000);
+        Assert.assertTrue(popup.getText().toString().contains(alonsignmentCode10));
+        Assert.assertTrue(homePage.parcellab_tracking_link.isDisplayed());
+        Assert.assertTrue(homePage.parcellab_tracking_link.isEnabled());
+        Assert.assertTrue(homePage.parcellab_carrier_link.isDisplayed());
+        Assert.assertTrue(homePage.parcellab_carrier_link.isEnabled());
+        Assert.assertTrue(homePage.parcellab_publik_link.isDisplayed());
+        Assert.assertTrue(homePage.parcellab_publik_link.isEnabled());
+        Driver.getDriver().navigate().back();
+        homePage.parcellab_filter_search_box.clear();
+        Thread.sleep(1000);
+        homePage.parcellab_filter_search_box.sendKeys(aldonsignmentCode11);
+        homePage.parcellab_search_btn.click();
+        Thread.sleep(2000);
+        String parcellab_such_ergebnis2 = "";
+        for (i = 1; i < 35; i++) {
+            Thread.sleep(2000);
+            List<WebElement> consignments2 = Driver.getDriver().findElements(By.xpath("//div[@class='row trackingStyle']"));
+            Thread.sleep(1000);
+            if (consignments2.size() != 1) {
+                Thread.sleep(10000);
+                Driver.getDriver().navigate().refresh();
+                Thread.sleep(1000);
+            } else {
+                for (WebElement s2 : consignments2) {
+                    parcellab_such_ergebnis2 = s2.getText();
+                    Thread.sleep(2000);
+                }
+                break;
+            }
+
+        }
+        Assert.assertTrue(parcellab_such_ergebnis2.contains(alonsignmentCode11));
+
+        /////////////////////////////////
+        Thread.sleep(3000);
+        Driver.getDriver().findElement(By.xpath("(//div[@class='col-md-3'])[1]")).click();
+        Thread.sleep(1000);
+        WebElement popup2 = wait.until(ExpectedConditions.visibilityOf(Driver.getDriver().findElement(
+                By.cssSelector("div.col-sm-12.col-md-4.same-h > div:nth-child(4) > div.col-lg-8"))));
+        Thread.sleep(2000);
+        Assert.assertTrue(popup2.isDisplayed());
+        Assert.assertTrue(popup2.getText().contains(alnsignmentCode11));
+        for (int x = 1; x < 50; x++) {
+            Thread.sleep(2000);
+            if (!homePage.parcellab_email_body.getText().contains("unterwegs")) {
+                Thread.sleep(20000);
+                Driver.getDriver().navigate().refresh();
+            } else {
+                break;
+            }
+        }
+        List<WebElement> emails = Driver.getDriver().findElements(By.cssSelector("div.alert.alert-notification p"));
+        Assert.assertTrue(emails.size() == 2);
+        Assert.assertTrue(homePage.parcellab_email_message.isEnabled());
+        Assert.assertTrue(homePage.parcellab_email_message.isEnabled());
+        Assert.assertTrue(homePage.parcellab_email_message.getText().contains("Deine Bestellung ist unterwegs"));
+
+    }
+
+    @Then("check delivery information pop up of ParcelLab5")
+    public void check_delivery_information_pop_up_of_parcel_lab5() throws InterruptedException {
+
+        //   #Popup is displayed
+        //   #Popup is displayed centered on Desktop
+        //   #the popup/page is correctly displayed
+        Thread.sleep(2000);
+        Assert.assertTrue(homePage.parcellab_tracking_link.isDisplayed());
+        Assert.assertTrue(homePage.parcellab_tracking_link.isEnabled());
+        Assert.assertTrue(homePage.parcellab_carrier_link.isDisplayed());
+        Assert.assertTrue(homePage.parcellab_carrier_link.isEnabled());
+        Assert.assertTrue(homePage.parcellab_publik_link.isDisplayed());
+        Assert.assertTrue(homePage.parcellab_publik_link.isEnabled());
+    }
+
+    @Then("check shipping confirmation mail from Parcellab5")
+    public void check_shipping_confirmation_mail_from_parcellab5() throws InterruptedException {
+        //   #The shipping mail is sent
+        Thread.sleep(8000);
+        Driver.getDriver().navigate().refresh();
+        for (int i = 1; i < 40; i++) {
+            Thread.sleep(2000);
+            if (!homePage.parcellab_email_body.getText().contains("unterwegs")) {
+                Thread.sleep(10000);
+                Driver.getDriver().navigate().refresh();
+            } else {
+                break;
+            }
+        }
+        List<WebElement> emails = Driver.getDriver().findElements(By.cssSelector("div.alert.alert-notification p"));
+        Assert.assertTrue(emails.size() == 2);
+        Assert.assertTrue(homePage.parcellab_email_message.isEnabled());
+        Assert.assertTrue(homePage.parcellab_email_message.isEnabled());
+        Assert.assertTrue(homePage.parcellab_email_message.getText().contains("Deine Bestellung ist unterwegs"));
+        emailPage.trash_mail_verify("unterwegs");
+    }
+
+    @When("navigate to delivery information popup_page in AECshop5")
+    public void navigate_to_delivery_information_popup_page_in_ae_cshop5() {
+        //  #click on track deliveryclick on track delivery
+        //      #the popup/page is displayed
+
+        Driver.getDriver().get(ConfigurationReader.getProperty("AEC_SHOP_URL"));
+        wait.until(ExpectedConditions.visibilityOf(homePage.kontakt_btn));
+        homePage.kontoanmelden_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(homePage.login_bestelnummerEingeben_box));
+        homePage.login_bestelnummerEingeben_box.sendKeys(orderCode);
+        homePage.login_postleitzahlEingeben_box.sendKeys(ConfigurationReader.getProperty("AEC_GUEST_POSTALCODE"));
+        homePage.weiter.click();
+        wait.until(ExpectedConditions.visibilityOf(homePage.imShopParcellabStatus_vollstandingZugestelt));
+    }
+
+    @Then("check delivery information popup_page in AECshop5")
+    public void check_delivery_information_popup_page_in_ae_cshop5() {
+        //   #Tracking Snippet with delivery information from ParcelLab is Displayfeld
+        //      #The current offer component is displayed
+        //      #the popup/page is correctly displayed
+
+        Assert.assertTrue(homePage.imShopParcellabStatus_vollstandingZugestelt.isDisplayed());
+        Assert.assertTrue(homePage.imShopParcellabStatus_vollstandingZugestelt.getText().contains("Vollständig zugestellt"));
+        Assert.assertTrue(homePage.zweiConsignmentZweiteLieferung_Verfolgung_btn.isDisplayed());
+        Assert.assertFalse(homePage.imShopEinBestellungInfo_ersteProduktInfo.getText().contains("LIEFERUNG VERFOLGEN"));
+        homePage.zweiConsignmentZweiteLieferung_Verfolgung_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(homePage.bestellungVerarbeitet_pubhub));
+        Assert.assertTrue(homePage.bestellungVerarbeitet_pubhub.isDisplayed());
+        Assert.assertTrue(homePage.bestellungVerarbeitet_pubhub.getText().contains("Bestellung verarbeitet"));
+        homePage.sendungVerfolgenPubhub_schliessen_btn.click();
+
+
+    }
+
+
+}
+--------------------------------------------------------------------------------------------
+ homePage.datenschutzbestimmungen_link.click();
+        Thread.sleep(2000);
+        String parentWindowHandle = Driver.getDriver().getWindowHandle();
+        Set<String> allWindowHandles = Driver.getDriver().getWindowHandles();
+        for (String childWindowHandle : allWindowHandles) {
+            if (!childWindowHandle.equals(parentWindowHandle)) {
+                Driver.getDriver().switchTo().window(childWindowHandle);
+            }
+
+        }
+        Thread.sleep(3000);
+        String actualURL = Driver.getDriver().getCurrentUrl();
+        String actualTitle = Driver.getDriver().getTitle();
+        String expectedURL = "https://www.aldi-onlineshop.de/Datenschutz/";
+        Assert.assertTrue(actualURL.contains(expectedURL));
+        Driver.getDriver().switchTo().window(parentWindowHandle);
+        ---------------------------------------------------------------------------------------------------
+          LocalTime time1 = LocalTime.now();
+        wait.until(ExpectedConditions.visibilityOfElementLocated(
+                By.xpath("//nav[@class='main-nav js-main-nav']//a[contains(text(),'Aktuelle Aktionen')]")));
+        LocalTime time2 = LocalTime.now();
+        String str1 = time1 + "";
+        String str2 = time2 + "";
+        SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss");
+        Date date1 = format.parse(str1);
+        Date date2 = format.parse(str2);
+        long difference1 = (date2.getTime() - date1.getTime()) / 1000; //millisec.==> sec
+        System.out.println("difference1   : " + difference1)
+        ---------------------------------------------------------------------------------------------
+
+ Driver.getDriver().manage().timeouts().implicitlyWait(5, TimeUnit.SECONDS);
+ 
+ 
+ -------------------------------------------------------------------------
+ package stepdefinitions.desktop;
+
+
+import io.cucumber.java.en.Given;
+import io.cucumber.java.en.Then;
+import io.restassured.http.ContentType;
+import io.restassured.path.json.JsonPath;
+import io.restassured.response.Response;
+import org.junit.Assert;
+import org.openqa.selenium.*;
+import org.openqa.selenium.support.ui.ExpectedConditions;
+
+import org.openqa.selenium.support.ui.FluentWait;
+import org.openqa.selenium.support.ui.Wait;
+import pages.desktop.*;
+import utilities.ConfigurationReader;
+import utilities.desktop.Driver;
+
+import java.io.UnsupportedEncodingException;
+import java.time.Duration;
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.util.List;
+import java.util.Random;
+
+import static io.restassured.RestAssured.given;
+
+public class STB_QAT_208_Aufruf_BackOffice_Login_Verwaltung {
+    static String endpoint;
+    Backoffice backoffice = new Backoffice();
+    Bestellung bestellung = new Bestellung();
+    TokenPage tokenPage = new TokenPage();
+    String orderCode;
+    String aldiReturnCode;
+    String entryCode;
+
+    Wait<WebDriver> wait = new FluentWait<WebDriver>(Driver.getDriver())
+            .withTimeout(Duration.ofSeconds(10L))
+            .pollingEvery(Duration.ofSeconds(2L))
+            .ignoring(NoSuchElementException.class);
+    JavascriptExecutor jsExecutor = (JavascriptExecutor) Driver.getDriver();
+
+
+    @Given("Backoffice alsShopmanager einloggen")
+    public void backoffice_als_shopmanager_einloggen() throws InterruptedException {
+        backoffice.backoffice_alsShopManager_einloggen();
+
+    }
+
+    @Then("Alle Standartelemente fuer Shopmanagerrolle aufrufen")
+    public void alle_standartelemente_fuer_shopmanagerrolle_aufrufen() throws InterruptedException {
+        // Shopmanagerrolle
+        //Information zur Vorratsdatenspeicherung
+
+        backoffice.administrations_suchfeld.sendKeys("Information zur Vorratsdatenspeicherung");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.information_zurVorratsdatenspeicherung_btn));
+        Assert.assertTrue(backoffice.information_zurVorratsdatenspeicherung_btn.isDisplayed());
+        backoffice.information_zurVorratsdatenspeicherung_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+        backoffice.administrations_suchfeld.clear();
+
+        //Algolia Such-konfiguration
+
+        backoffice.administrations_suchfeld.sendKeys("Algolia Such-konfiguration");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.algolia_Such_konfiguration_btn));
+        Assert.assertTrue(backoffice.algolia_Such_konfiguration_btn.isDisplayed());
+        backoffice.algolia_Such_konfiguration_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+        backoffice.administrations_suchfeld.clear();
+        //Konfiguration der Kundendaten-Cloud
+
+        backoffice.administrations_suchfeld.sendKeys("Konfiguration der Kundendaten-Cloud");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.konfiguration_derKundendaten_Cloud_btn));
+        Assert.assertTrue(backoffice.konfiguration_derKundendaten_Cloud_btn.isDisplayed());
+        backoffice.konfiguration_derKundendaten_Cloud_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+        backoffice.administrations_suchfeld.clear();
+
+        //CDC Webhook Nachrichten
+        backoffice.administrations_suchfeld.sendKeys("CDC Webhook Nachrichten");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.cdc_Webhook_Nachrichten_btn));
+        Assert.assertTrue(backoffice.cdc_Webhook_Nachrichten_btn.isDisplayed());
+        backoffice.cdc_Webhook_Nachrichten_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+        backoffice.administrations_suchfeld.clear();
+
+        //Aqount-Bestellposition
+        backoffice.administrations_suchfeld.sendKeys("Aqount-Bestellposition");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.aqount_Bestellposition_btn));
+        Assert.assertTrue(backoffice.aqount_Bestellposition_btn.isDisplayed());
+        backoffice.aqount_Bestellposition_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+        backoffice.administrations_suchfeld.clear();
+
+        //Klarna Zahlungsmethode
+        backoffice.administrations_suchfeld.sendKeys("Klarna Zahlungsmethode");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.klarna_Zahlungsmethode_btn));
+        Assert.assertTrue(backoffice.klarna_Zahlungsmethode_btn.isDisplayed());
+        backoffice.klarna_Zahlungsmethode_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+        backoffice.administrations_suchfeld.clear();
+
+        //TeleCash Zahlungsmethode
+        backoffice.administrations_suchfeld.sendKeys("TeleCash Zahlungsmethode");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.teleCash_Zahlungsmethode_btn));
+        Assert.assertTrue(backoffice.teleCash_Zahlungsmethode_btn.isDisplayed());
+        backoffice.teleCash_Zahlungsmethode_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+        backoffice.administrations_suchfeld.clear();
+
+        //Lieferart
+        backoffice.administrations_suchfeld.sendKeys("Lieferart");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.lieferart_btn));
+        Assert.assertTrue(backoffice.lieferart_btn.isDisplayed());
+        backoffice.lieferart_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+        backoffice.administrations_suchfeld.clear();
+
+        //Transporter
+        backoffice.administrations_suchfeld.sendKeys("Transporter");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.transporter_btn));
+        Assert.assertTrue(backoffice.transporter_btn.isDisplayed());
+        backoffice.transporter_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+        backoffice.administrations_suchfeld.clear();
+
+        //Angestellte
+        backoffice.administrations_suchfeld.sendKeys("Angestellte");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.angestelte_btn));
+        Assert.assertTrue(backoffice.angestelte_btn.isDisplayed());
+        backoffice.angestelte_btn.click();
+        Thread.sleep(3000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+        backoffice.administrations_suchfeld.clear();
+
+        //Reporting
+        backoffice.administrations_suchfeld.sendKeys("Reporting");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.reporting_navigation));
+        Assert.assertTrue(backoffice.reporting_navigation.isDisplayed());
+        backoffice.reporting_navigation.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+
+        backoffice.userProfilLogout_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(backoffice.backoffice_abmelden_btn));
+        backoffice.backoffice_abmelden_btn.click();
+
+
+    }
+
+    @Then("Manueller Abschluss von Retouren")
+    public void manueller_abschluss_von_retouren() throws InterruptedException, UnsupportedEncodingException, UnsupportedEncodingException {
+        //Manueller Abschluss von Retouren
+        switch (ConfigurationReader.getProperty("AEC_VENDERCODE")) {
+            case "medionDE":
+                bestellung.trashEmailErstellen_ein_medionDE_ProduktAlsGast_bestellen();
+                break;
+            case "tstDE":
+                bestellung.emailErstellen_ein_tstProduktAlsGast_bestellen();
+        }
+
+        orderCode = bestellung.bestellnummer;
+        Thread.sleep(5000);
+        backoffice.backoffice_einloggen();
+        backoffice.backoffice_aqountexport_cronjob_durchfuehrung();
+        Thread.sleep(7000);
+        //     Token genieren
+        tokenPage.accessToken();
+        //      Abruf Einer Bestellung
+        if (ConfigurationReader.getProperty("AEC_SHOP_URL").contains("https://www-aec-s1.preprod.an-cms.com/")) {
+            endpoint = "https://aldivendorwebservices.co6hnkccbu-aldiitpla2-s1-public.model-t.cc.commerce.ondemand.com/aldivendorwebservices/2.0/DE/vendor/";
+        } else {
+            endpoint = "https://aldivendorwebservices.co6hnkccbu-aldiitpla2-s2-public.model-t.cc.commerce.ondemand.com/aldivendorwebservices/2.0/DE/vendor/";
+        }
+        Response response1 = given().auth().oauth2(tokenPage.token)
+                .accept(ContentType.JSON).
+                contentType(ContentType.JSON).when()
+                .get(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode);
+        Thread.sleep(3000);
+        Assert.assertTrue(response1.statusCode() == 200 || response1.statusCode() == 201);             //StatusCode überprüfen
+        String expected_orderCode = "[" + orderCode + "]";                                                         //      Frontend Bestellnummer
+        JsonPath jsonPath = response1.jsonPath();
+        Assert.assertEquals("orderCode ist nicht identisch", expected_orderCode, jsonPath.get("orders.code").toString());  //Backend orderCode
+
+        //  POST====>Erzeugung von Lieferung
+        LocalDate date = LocalDate.now();                                                             //expectedDelivery date generiern
+        int min = 100000000;                                                                   //zufällig vendorConsignmentCode und trackingID erstellen
+        int max = 990000000;
+        int min1 = 100000000;
+        int max1 = 990000000;
+        int randon0 = (int) Math.floor(Math.random() * (max - min + 1) + min);
+        String random1 = randon0 + "972";
+        int random2 = (int) Math.floor(Math.random() * (max1 - min1 + 1) + min1);
+        Random random = new Random();
+        char randomchar = (char) (random.nextInt(26) + 'A');
+        String vendorConsignmentCode = "" + randomchar + random2 + randomchar + randomchar;
+        //POST==> Erzeugung von Lieferung status DELIVERED
+        Response response2 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"DHL\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 1,\n" +
+                        "        \"quantity\": 1\n" +
+                        "      }\n" +
+                        "    ],\n" +
+                        "    \"expectedDelivery\": \"" + date + "\",\n" +
+                        "    \"receiptDelivery\": \"" + date + "\",\n" +
+                        "    \"shippingDate\": \"" + date + "\",\n" +
+                        "    \"status\": \"DELIVERED\",\n" +
+                        "    \"statusText\": \"Zugestellt\",\n" +
+                        "    \"trackingId\": \"" + random1 + "\",\n" +
+                        "    \"trackingLink\": \"https://trackingLink.de\",\n" +
+                        "    \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "\"\n" +
+                        "  }\n" +
+                        "]"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+        Assert.assertTrue(response2.statusCode() == 200 || response2.statusCode() == 201);              // Statuscode überprüfen
+        backoffice.backoffice_consignmentAqountExport_cronjob_durchfuehrung();
+        Thread.sleep(2000);
+        backoffice.backoffice_SimpleExportCronJob_parcelLabTrackingExport();
+        Thread.sleep(2000);
+        tokenPage.accessToken();
+        LocalDateTime dateTime30 = LocalDateTime.now();
+        LocalDate date30 = LocalDate.now();                                                             //expectedDelivery date generiern
+        int random32 = (int) Math.floor(Math.random() * (max1 - min1 + 1) + min1);
+        Random random30 = new Random();
+        char randomchar30 = (char) (random30.nextInt(26) + 'A');
+        String rma = "" + randomchar30 + random32 + randomchar30;
+
+        Response response3 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("{\n" +
+                        "  \"customerInfo\": {\n" +
+                        "    \"address\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"type\": \"PACKSTATION\"\n" +
+                        "    },\n" +
+                        "    \"emailAddress\": \"hd1-testuser@aldi-nord.de\"\n" +
+                        "\n" +
+                        "  },\n" +
+                        "  \"entries\": [\n" +
+                        "    {\n" +
+                        "      \"notes\": \"TestaldiAykan\",\n" +
+                        "      \"orderEntryNumber\": 1,\n" +
+                        "      \"quantity\": 1,\n" +
+                        "      \"reason\": \"DAMAGEDINTRANSIT\",\n" +
+                        "      \"status\": \"IN_PROGRESS\"\n" +
+                        "    }\n" +
+                        "  ],\n" +
+                        "  \"initiationDate\": \"" + dateTime30 + "\",\n" +
+                        "  \"orderCode\": \"" + orderCode + "\",\n" +
+                        "  \"rma\": \"" + rma + "\"\n" +
+                        "}")
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/returns/");
+        JsonPath jsonPath30 = response3.jsonPath();
+        String entry = jsonPath30.get("entries.entryCode").toString();
+        entryCode = entry.substring(1, entry.length() - 1);
+        aldiReturnCode = jsonPath30.get("aldiReturnCode").toString();
+        //response3.prettyPrint();
+        Assert.assertTrue(response3.statusCode() == 200 || response3.statusCode() == 201);  // Statuscode überprüfen
+        backoffice.backoffice_abmelden();
+        backoffice.backoffice_alsShopManager_einloggen();
+        backoffice.administrations_suchfeld.clear();
+        Thread.sleep(1000);
+        backoffice.administrations_suchfeld.sendKeys("Rücksendungsanfrage");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.rucksendungsanfrage_btn));
+        backoffice.rucksendungsanfrage_btn.click();
+        Thread.sleep(2000);
+        backoffice.suchfeld.sendKeys(aldiReturnCode);
+        Thread.sleep(1000);
+        backoffice.such_btn.click();
+        Thread.sleep(2000);
+        WebElement rucksendungelement = Driver.getDriver().findElement(By.xpath("//span[(text()='" + aldiReturnCode + "')]"));
+        rucksendungelement.click();
+        Thread.sleep(2000);
+        backoffice.retourenabschliesen_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(backoffice.rucksendung_comment_feld));
+        backoffice.rucksendung_comment_feld.sendKeys("TA Test");
+        Thread.sleep(1000);
+        backoffice.rucksendung_send_btn.click();
+        Thread.sleep(5000);
+        WebElement status = Driver.getDriver().findElement(
+                By.xpath("(//span[contains(text(),'Abgeschlossen')])[1]"));
+        Assert.assertTrue(status.isDisplayed());
+        Assert.assertTrue(status.getText().contains(aldiReturnCode + " - Abgeschlossen"));
+        backoffice.backoffice_abmelden();
+
+    }
+
+    @Given("Backoffice alsContentapprover einloggen")
+    public void backoffice_als_contentapprover_einloggen() throws InterruptedException {
+        backoffice.backoffice_alsContentapprover_einloggen();
+
+    }
+
+    @Then("Alle Standartelemente fuer Contentapprover aufrufen")
+    public void alle_standartelemente_fuer_contentapprover_aufrufen() throws InterruptedException {
+//  #Contentapproverrolle
+//
+
+
+        //#Produkte
+        Thread.sleep(1000);
+        backoffice.administrations_suchfeld.sendKeys("Produkte");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.produkteNavigation_btn));
+        Assert.assertTrue(backoffice.produkteNavigation_btn.isDisplayed());
+        backoffice.produkteNavigation_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+        backoffice.administrations_suchfeld.clear();
+
+        // # Kategorien
+        Thread.sleep(2000);
+        backoffice.administrations_suchfeld.sendKeys("Kategorien");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.kategorien_navigation_btn));
+        Assert.assertTrue(backoffice.kategorien_navigation_btn.isDisplayed());
+        backoffice.kategorien_navigation_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+        backoffice.administrations_suchfeld.clear();
+
+        // # Logistiker
+        Thread.sleep(1000);
+        backoffice.administrations_suchfeld.sendKeys("Logistiker");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.logistiker_navigation_btn));
+        Assert.assertTrue(backoffice.logistiker_navigation_btn.isDisplayed());
+        backoffice.logistiker_navigation_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+        backoffice.administrations_suchfeld.clear();
+
+        // # Lieferanten
+        Thread.sleep(1000);
+        backoffice.administrations_suchfeld.sendKeys("Lieferant");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.lieferant_navigation_btn));
+        Assert.assertTrue(backoffice.lieferant_navigation_btn.isDisplayed());
+        backoffice.lieferant_navigation_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+        backoffice.administrations_suchfeld.clear();
+
+
+        //  #Medien
+        Thread.sleep(1000);
+        backoffice.administrations_suchfeld.sendKeys("Medien");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.medien_nav_btn));
+        Assert.assertTrue(backoffice.medien_nav_btn.isDisplayed());
+        backoffice.medien_nav_btn.click();
+        Thread.sleep(7000);
+        wait.until(ExpectedConditions.visibilityOfElementLocated(By.xpath("(//span[(text()='Medien')])[2]")));
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+        List<WebElement> medien = Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']"));
+        String medientex = "";
+        for (WebElement s : medien
+        ) {
+            medientex += s.getText();
+
+        }
+        Assert.assertTrue(medientex.contains("Online"));
+        Assert.assertTrue(medientex.contains("Stage"));
+
+        //#Medien Ordner
+        Assert.assertTrue(backoffice.medienordner_nav_btn.isDisplayed());
+        backoffice.medienordner_nav_btn.click();
+        Thread.sleep(2000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+
+        //#Medien Container
+        Assert.assertTrue(backoffice.medien_container_nav_btn.isDisplayed());
+        backoffice.medien_container_nav_btn.click();
+        Thread.sleep(2000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[contains(@class,'yw-coll-browser-hyperlink z-listitem')]")).size() >= 1);
+        List<WebElement> medien_conteiner = Driver.getDriver().findElements(
+                By.xpath("//tr[contains(@class,'yw-coll-browser-hyperlink z-listitem')]"));
+        String medienconteinertex = "";
+        for (WebElement y : medien_conteiner
+        ) {
+            medienconteinertex += y.getText();
+
+        }
+        Thread.sleep(2000);
+        Assert.assertTrue(medienconteinertex.contains("Online"));
+        Assert.assertTrue(medienconteinertex.contains("Staged"));
+
+        backoffice.administrations_suchfeld.clear();
+
+        //Youtube Video
+        Thread.sleep(2000);
+        backoffice.administrations_suchfeld.sendKeys("Youtube Video");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.youtubevideo_nav_btn));
+        Assert.assertTrue(backoffice.youtubevideo_nav_btn.isDisplayed());
+        backoffice.youtubevideo_nav_btn.click();
+        Thread.sleep(2000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[contains(@class,'yw-coll-browser-hyperlink z-listitem')]")).size() >= 1);
+        List<WebElement> youtubevideo = Driver.getDriver().findElements(
+                By.xpath("//tr[contains(@class,'yw-coll-browser-hyperlink z-listitem')]"));
+        String youtubevideotex = "";
+        for (WebElement y : youtubevideo
+        ) {
+            youtubevideotex += y.getText();
+
+        }
+
+        Assert.assertTrue(youtubevideotex.contains("Online"));
+        Assert.assertTrue(youtubevideotex.contains("Stage"));
+        backoffice.administrations_suchfeld.clear();
+
+        //      #Medien - Reports---Content-Approver können keine Reports einsehen
+        Thread.sleep(2000);
+        backoffice.administrations_suchfeld.sendKeys("Report");
+        Thread.sleep(2000);
+        WebElement body = Driver.getDriver().findElement(By.xpath("(//tbody[@class='z-treechildren'])[1]"));
+        //System.out.println("Body :" + body.getText());
+        Assert.assertFalse(body.getText().contains("Report"));
+        backoffice.administrations_suchfeld.clear();
+
+        //#Deeplink für Ressourcen
+        Thread.sleep(1000);
+        backoffice.administrations_suchfeld.sendKeys("Deeplink für Ressourcen");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.deeplinkFuerRessourcen));
+        Assert.assertTrue(backoffice.deeplinkFuerRessourcen.isDisplayed());
+        //backoffice.deeplinkFuerRessourcen.click();
+        backoffice.administrations_suchfeld.clear();
+
+        // #WCMS im Backoffice
+//  #Seite
+        Thread.sleep(1000);
+        backoffice.administrations_suchfeld.sendKeys("Seite");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.seite_nav_btn));
+        Assert.assertTrue(backoffice.seite_nav_btn.isDisplayed());
+        backoffice.seite_nav_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+        backoffice.administrations_suchfeld.clear();
+//#Seitenvorlage
+        Thread.sleep(2000);
+        backoffice.administrations_suchfeld.sendKeys("Seitenvorlage");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.seitenvorlage_nav_btn));
+        Assert.assertTrue(backoffice.seitenvorlage_nav_btn.isDisplayed());
+        backoffice.seitenvorlage_nav_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+        backoffice.administrations_suchfeld.clear();
+//  #Content Slot
+        Thread.sleep(1000);
+        backoffice.administrations_suchfeld.sendKeys("Content Slot");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.contentslot_nav_btn));
+        Assert.assertTrue(backoffice.contentslot_nav_btn.isDisplayed());
+        Thread.sleep(1000);
+        backoffice.contentslot_nav_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+        backoffice.administrations_suchfeld.clear();
+//#Komponente
+        Thread.sleep(1000);
+        backoffice.administrations_suchfeld.sendKeys("Komponente");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.komponent_nav_btn));
+        Assert.assertTrue(backoffice.komponent_nav_btn.isDisplayed());
+        backoffice.komponent_nav_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+        backoffice.administrations_suchfeld.clear();
+        // #Navigationsknoten
+        Thread.sleep(1000);
+        backoffice.administrations_suchfeld.sendKeys("Navigationsknoten");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.navigationsknoten_nav_btn));
+        Assert.assertTrue(backoffice.navigationsknoten_nav_btn.isDisplayed());
+        backoffice.navigationsknoten_nav_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() >= 1);
+        backoffice.administrations_suchfeld.clear();
+
+        //       #PIM
+//  #PIM Import-Log
+        Thread.sleep(1000);
+        backoffice.administrations_suchfeld.sendKeys("PIM Import-Log");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.pimimportLog_nav_btn));
+        Assert.assertTrue(backoffice.pimimportLog_nav_btn.isDisplayed());
+        backoffice.pimimportLog_nav_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() == 0);
+        backoffice.administrations_suchfeld.clear();
+// #PIM Produkt Import-Log
+        Thread.sleep(1000);
+        backoffice.administrations_suchfeld.sendKeys("PIM Produkt Import-Log");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.pimproduktImportLog_nav_btn));
+        Assert.assertTrue(backoffice.pimproduktImportLog_nav_btn.isDisplayed());
+        backoffice.pimproduktImportLog_nav_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[@class='yw-coll-browser-hyperlink z-listitem']")).size() == 0);
+        backoffice.administrations_suchfeld.clear();
+        //     #TeleCashPaymentMethod(TeleCash Zahlungsmethode)
+        Thread.sleep(1000);
+        backoffice.administrations_suchfeld.sendKeys("TeleCash Zahlungsmethode");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.telecashPaymentMethod_nav_btn));
+        Assert.assertTrue(backoffice.telecashPaymentMethod_nav_btn.isDisplayed());
+        backoffice.telecashPaymentMethod_nav_btn.click();
+        Thread.sleep(1000);
+
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[contains(@class,'yw-coll-browser-hyperlink z-listitem')]")).size() == 3);
+        backoffice.administrations_suchfeld.clear();
+//      #KlaranPaymentMethod(Klarna Zahlungsmethode)
+        Thread.sleep(1000);
+        backoffice.administrations_suchfeld.sendKeys("Klarna Zahlungsmethode");
+        wait.until(ExpectedConditions.visibilityOf(backoffice.klarnaPaymentMethod_nav_btn));
+        Assert.assertTrue(backoffice.klarnaPaymentMethod_nav_btn.isDisplayed());
+        backoffice.klarnaPaymentMethod_nav_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[contains(@class,'yw-coll-browser-hyperlink z-listitem')]")).size() == 2);
+        backoffice.administrations_suchfeld.clear();
+        //#System → Texte → Texte
+        Thread.sleep(2000);
+        backoffice.administrations_suchfeld.sendKeys("Texte");
+        Thread.sleep(1000);
+        wait.until(ExpectedConditions.visibilityOf(backoffice.systemMenu_nav_btn));
+        backoffice.texteMenu_nav_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(backoffice.texte_nav_btn));
+        Assert.assertTrue(backoffice.systemMenu_nav_btn.isDisplayed());
+        Assert.assertTrue(backoffice.texteMenu_nav_btn.isDisplayed());
+        Assert.assertTrue(backoffice.texte_nav_btn.isDisplayed());
+        backoffice.texte_nav_btn.click();
+        Thread.sleep(1000);
+        Assert.assertTrue(Driver.getDriver().findElements(
+                By.xpath("//tr[contains(@class,'yw-coll-browser-hyperlink z-listitem')]")).size() >= 1);
+        backoffice.administrations_suchfeld.clear();
+        backoffice.backoffice_abmelden();
+        //            #Smartedit (redaktionelle Inhalte)
+//  #Produktrückrufe  #Banner  #Teaser  #Footer  #Side-Navigation #Top-Navigation  #Links #System → Texte → Texte
+
+
+    }
+
+
+    @Given("Backoffice alsCustomersupport einloggen")
+    public void backoffice_als_customersupport_einloggen() throws InterruptedException {
+        backoffice.backoffice_alsCustomersupportmanager_einloggen();
+
+
+    }
+
+    @Then("Alle Standartelemente fuer Customersupport aufrufen")
+    public void alle_standartelemente_fuer_customersupport_aufrufen() throws InterruptedException {
+        //CSM Rolle
+//#Kunde
+//#Produkte    online
+//#Kategorien (Aktionen)   online
+//#Bestellung(Bestellungen,Bestellungseinträge,Bestellungsverlaufseintrag,Sendung,Sendungseintrag)Historische Bestellungen
+//#Rücksendung
+//#Rechnung
+//#Lieferant
+//#Logistiker
+//#Medien (z.B. Gebrauchsanleitungen)    online
+//#Medien
+//#Geschäftsprozesse
+//#Angestellte
+//#Produkterinnerung
+//#Verarbeitete Produkterinnerung  Produktrezensionen
+//#Kunden Log-In         Berichte zu personenbezogenen Daten
+//#Anonymisierung des Kundenkontos auf Anfrage  Kundenbewertungen
+//#Manueller Abschluss von Retouren
+        Thread.sleep(2000);
+        WebElement body = Driver.getDriver().findElement(
+                By.xpath("(//div[@ytestid='explorerTree' and @class='yw-explorerTree z-vfiletree'])[5]"));
+        //System.out.println("Body :" + body.getText());
+        Assert.assertTrue(body.getText().contains("Kunde"));
+        Assert.assertTrue(body.getText().contains("Produkte"));
+        Assert.assertTrue(body.getText().contains("Kategorien"));
+        Assert.assertTrue(body.getText().contains("Bestellungen"));
+        Assert.assertTrue(body.getText().contains("Bestellungseinträge"));
+        Assert.assertTrue(body.getText().contains("Historische Bestellungen"));
+        Assert.assertTrue(body.getText().contains("Sendung"));
+        Assert.assertTrue(body.getText().contains("Rücksendung"));
+        Assert.assertTrue(body.getText().contains("Rechnung"));
+        Assert.assertTrue(body.getText().contains("Lieferant"));
+        Assert.assertTrue(body.getText().contains("Logistiker"));
+        Assert.assertFalse(body.getText().contains("Medien"));
+        Assert.assertTrue(body.getText().contains("Geschäftsprozesse"));
+        Assert.assertTrue(body.getText().contains("Angestellte"));
+        Assert.assertTrue(body.getText().contains("Produkterinnerung"));
+        Assert.assertTrue(body.getText().contains("Produktrezensionen"));
+        Assert.assertTrue(body.getText().contains("Kundenbewertungen"));
+        Assert.assertTrue(body.getText().contains("Berichte zu personenbezogenen Daten"));
+        Assert.assertTrue(body.getText().contains("Information zur Vorratsdatenspeicherung"));
+        backoffice.backoffice_abmelden();
+
+
+    }
+
+    @Then("Manueller Abschluss von Retouren als Customersupportmanager")
+    public void manueller_abschluss_von_retouren_als_customersupportmanager() throws InterruptedException, UnsupportedEncodingException {
+
+        //Manueller Abschluss von Retouren
+        switch (ConfigurationReader.getProperty("AEC_VENDERCODE")) {
+            case "medionDE":
+                bestellung.trashEmailErstellen_ein_medionDE_ProduktAlsGast_bestellen();
+                break;
+            case "tstDE":
+                bestellung.emailErstellen_ein_tstProduktAlsGast_bestellen();
+        }
+
+        orderCode = bestellung.bestellnummer;
+        Thread.sleep(5000);
+        backoffice.backoffice_einloggen();
+        backoffice.backoffice_aqountexport_cronjob_durchfuehrung();
+        Thread.sleep(7000);
+        //     Token genieren
+        tokenPage.accessToken();
+        //      Abruf Einer Bestellung
+        if (ConfigurationReader.getProperty("AEC_SHOP_URL").contains("https://www-aec-s1.preprod.an-cms.com/")) {
+            endpoint = "https://aldivendorwebservices.co6hnkccbu-aldiitpla2-s1-public.model-t.cc.commerce.ondemand.com/aldivendorwebservices/2.0/DE/vendor/";
+        } else {
+            endpoint = "https://aldivendorwebservices.co6hnkccbu-aldiitpla2-s2-public.model-t.cc.commerce.ondemand.com/aldivendorwebservices/2.0/DE/vendor/";
+        }
+        Response response1 = given().auth().oauth2(tokenPage.token)
+                .accept(ContentType.JSON).
+                contentType(ContentType.JSON).when()
+                .get(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode);
+        Thread.sleep(3000);
+        Assert.assertTrue(response1.statusCode() == 200 || response1.statusCode() == 201);             //StatusCode überprüfen
+        String expected_orderCode = "[" + orderCode + "]";                                                         //      Frontend Bestellnummer
+        JsonPath jsonPath = response1.jsonPath();
+        Assert.assertEquals("orderCode ist nicht identisch", expected_orderCode, jsonPath.get("orders.code").toString());  //Backend orderCode
+
+        //  POST====>Erzeugung von Lieferung
+        LocalDate date = LocalDate.now();                                                             //expectedDelivery date generiern
+        int min = 100000000;                                                                   //zufällig vendorConsignmentCode und trackingID erstellen
+        int max = 990000000;
+        int min1 = 100000000;
+        int max1 = 990000000;
+        int randon0 = (int) Math.floor(Math.random() * (max - min + 1) + min);
+        String random1 = randon0 + "972";
+        int random2 = (int) Math.floor(Math.random() * (max1 - min1 + 1) + min1);
+        Random random = new Random();
+        char randomchar = (char) (random.nextInt(26) + 'A');
+        String vendorConsignmentCode = "" + randomchar + random2 + randomchar + randomchar;
+        //POST==> Erzeugung von Lieferung status DELIVERED
+        Response response2 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[\n" +
+                        "  {\n" +
+                        "    \"carrier\": \"DHL\",\n" +
+                        "    \"entries\": [\n" +
+                        "      {\n" +
+                        "        \"orderEntryNumber\": 1,\n" +
+                        "        \"quantity\": 1\n" +
+                        "      }\n" +
+                        "    ],\n" +
+                        "    \"expectedDelivery\": \"" + date + "\",\n" +
+                        "    \"receiptDelivery\": \"" + date + "\",\n" +
+                        "    \"shippingDate\": \"" + date + "\",\n" +
+                        "    \"status\": \"DELIVERED\",\n" +
+                        "    \"statusText\": \"Zugestellt\",\n" +
+                        "    \"trackingId\": \"" + random1 + "\",\n" +
+                        "    \"trackingLink\": \"https://trackingLink.de\",\n" +
+                        "    \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "\"\n" +
+                        "  }\n" +
+                        "]"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/consignments");
+        Assert.assertTrue(response2.statusCode() == 200 || response2.statusCode() == 201);              // Statuscode überprüfen
+        backoffice.backoffice_consignmentAqountExport_cronjob_durchfuehrung();
+        Thread.sleep(2000);
+        backoffice.backoffice_SimpleExportCronJob_parcelLabTrackingExport();
+        Thread.sleep(2000);
+        tokenPage.accessToken();
+        LocalDateTime dateTime30 = LocalDateTime.now();    //expectedDelivery date generiern
+        int random32 = (int) Math.floor(Math.random() * (max1 - min1 + 1) + min1);
+        Random random30 = new Random();
+        char randomchar30 = (char) (random30.nextInt(26) + 'A');
+        String rma = "" + randomchar30 + random32 + randomchar30;
+
+        Response response3 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("{\n" +
+                        "  \"customerInfo\": {\n" +
+                        "    \"address\": {\n" +
+                        "      \"countryIsoCode\": \"DE\",\n" +
+                        "      \"type\": \"PACKSTATION\"\n" +
+                        "    },\n" +
+                        "    \"emailAddress\": \"hd1-testuser@aldi-nord.de\"\n" +
+                        "\n" +
+                        "  },\n" +
+                        "  \"entries\": [\n" +
+                        "    {\n" +
+                        "      \"notes\": \"TestaldiAykan\",\n" +
+                        "      \"orderEntryNumber\": 1,\n" +
+                        "      \"quantity\": 1,\n" +
+                        "      \"reason\": \"DAMAGEDINTRANSIT\",\n" +
+                        "      \"status\": \"IN_PROGRESS\"\n" +
+                        "    }\n" +
+                        "  ],\n" +
+                        "  \"initiationDate\": \"" + dateTime30 + "\",\n" +
+                        "  \"orderCode\": \"" + orderCode + "\",\n" +
+                        "  \"rma\": \"" + rma + "\"\n" +
+                        "}")
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/returns/");
+        JsonPath jsonPath30 = response3.jsonPath();
+        String entry = jsonPath30.get("entries.entryCode").toString();
+        entryCode = entry.substring(1, entry.length() - 1);
+        aldiReturnCode = jsonPath30.get("aldiReturnCode").toString();
+        //response3.prettyPrint();
+        Assert.assertTrue(response3.statusCode() == 200 || response3.statusCode() == 201);  // Statuscode überprüfen
+        backoffice.backoffice_abmelden();
+        backoffice.backoffice_alsCustomersupportmanager_einloggen();
+        Thread.sleep(1000);
+        Driver.getDriver().findElement(
+                By.xpath("//span[@ytestid='customersupportbackoffice.typenode.all.returns']")).click();
+        Thread.sleep(2000);
+        backoffice.suchfeld.sendKeys(aldiReturnCode);
+        Thread.sleep(1000);
+        backoffice.such_btn.click();
+        Thread.sleep(2000);
+        WebElement rucksendungelement = Driver.getDriver().findElement(By.xpath("//span[(text()='" + aldiReturnCode + "')]"));
+        rucksendungelement.click();
+        Thread.sleep(2000);
+        backoffice.retourenabschliesen_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(backoffice.rucksendung_comment_feld));
+        backoffice.rucksendung_comment_feld.sendKeys("TA Test");
+        Thread.sleep(1000);
+        backoffice.rucksendung_send_btn.click();
+        Thread.sleep(5000);
+        WebElement status = Driver.getDriver().findElement(
+                By.xpath("(//span[contains(text(),'Abgeschlossen')])[2]"));
+        Assert.assertTrue(status.isDisplayed());
+        Assert.assertTrue(status.getText().contains(aldiReturnCode + " - Abgeschlossen"));
+        backoffice.backoffice_abmelden();
+
+
+    }
+
+
+}
+-----------------------------------------------------------------------------------------------------------------------------
+   Actions actions = new Actions(Driver.getDriver());
+        actions.doubleClick(backoffice.cronjob_generierte_report).perform();
+        wait.until(ExpectedConditions.visibilityOf(backoffice.cronjob_report_herunterladen_btn));
+        backoffice.cronjob_report_herunterladen_btn.click();
+        Thread.sleep(2000);
+
+        String name;
+        // String name="DE-dailyDiffOrderDataConsignmentReportCronJob-v2*.xlsx";
+        if (cronjob.equals("DE-dailyProductReminderReportCronJob")) {
+            name = "Erinnerungsuebersicht_DE" + "*.csv";
+
+        } else if (cronjob.equals("DE-dailyAnonymizedOrdersReportCronJob")) {
+            name = "Anonymisierte Bestellungen DE" + "*.csv";
+        } else {
+            name = cronjob + "*.csv";
+        }
+
+        excelUtil.Excelcronjob_report_reading(downloadDirectoryUtil.getDownloadDirectoryPath(), name);
+        // System.out.println("Class row num : "+excelUtil.sheet.getLastRowNum());
+        // Assert.assertTrue(excelUtil.sheet.getLastRowNum()>=2);
+        --------------------------------------------------------------------------------------------------------------
+
+ @When("Eine Menge retornieren")
+    public void eine_menge_retornieren() throws InterruptedException {
+
+        ////////// READY
+        swaggerPage.erzeugung_von_lieferungen_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(swaggerPage.try_it_out_btn));
+        swaggerPage.try_it_out_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(swaggerPage.lieferung_ordercode_box));
+        swaggerPage.lieferung_ordercode_box.sendKeys(orderCode);
+        swaggerPage.lieferung_vendorcode_box.sendKeys(swaggerPage.vendorCode);
+
+        int min = 100000000;                                                                   //zufällig vendorConsignmentCode und trackingID erstellen
+        int max = 990000000;
+        int min1 = 100000000;
+        int max1 = 990000000;
+        int randon0 = (int) Math.floor(Math.random() * (max - min + 1) + min);
+        random_trackingID = randon0 + "927";
+        int random2 = (int) Math.floor(Math.random() * (max1 - min1 + 1) + min1);
+        Random random = new Random();
+        char randomchar = (char) (random.nextInt(26) + 'A');
+        vendorConsignmentCode = "" + randomchar + random2 + randomchar + randomchar;
+        vendorPackageCode = "" + orderCode;
+        String lieferungErzeugenReady_body = "[\n" +
+                "  {\n" +
+                "    \"carrier\": \"DHL\",\n" +
+                "    \"entries\": [\n" +
+                "      {\n" +
+                "        \"orderEntryNumber\": 1,\n" +
+                "          \"quantity\": 1,\n" +
+                "        \"packageEntries\": [\n" +
+                "          {\n" +
+                "            \"status\": \"READY\",\n" +
+                "            \"statusText\": \"READY\",\n" +
+                "            \"vendorPackageCode\": \"" + vendorPackageCode + "-1\"\n" +
+                "          }\n" +
+                "        ]\n" +
+                "      \n" +
+                "      }\n" +
+                "    ],\n" +
+                "      \"shippingAddress\": {\n" +
+                "      \"countryIsoCode\": \"DE\",\n" +
+                "      \"type\": \"DEFAULT\"\n" +
+                "    },\n" +
+                "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "\"\n" +
+                "  }\n" +
+                "]\n";
+
+        swaggerPage.request_body.clear();
+        Thread.sleep(2000);
+        swaggerPage.request_body.sendKeys(lieferungErzeugenReady_body);
+        Thread.sleep(2000);
+        swaggerPage.execute_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(swaggerPage.response_status));
+        Assert.assertTrue(swaggerPage.response_status.getText().contains("201") ||
+                swaggerPage.response_status.getText().contains("200"));
+        /////////////////          DELIVERED
+        String s = swaggerPage.aldiConsignmentCode_atribute.getText();
+        String aldiConsignmentCode = s.substring(1, s.length() - 1);
+        swaggerPage.erzeugung_von_lieferungen_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(swaggerPage.aktualisierung_einerLieferung_btn));
+        swaggerPage.aktualisierung_einerLieferung_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(swaggerPage.try_it_out_btn));
+        swaggerPage.try_it_out_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(swaggerPage.aktualisierung_einerLieferung_orderCode_box));
+        swaggerPage.aldiConsignmentCode_box.sendKeys(aldiConsignmentCode);
+        swaggerPage.aktualisierung_einerLieferung_orderCode_box.sendKeys(orderCode);
+        swaggerPage.aktualisierung_einerLieferung_vendorCode_box.sendKeys(swaggerPage.vendorCode);
+
+        LocalDate date = LocalDate.now();
+        String delivered_body = "  {\n" +
+                "    \"carrier\": \"DHL\",\n" +
+                "    \"entries\": [\n" +
+                "      {\n" +
+                "        \"orderEntryNumber\": 1,\n" +
+                "        \"quantity\": 1,\n" +
+                "        \"packageEntries\": [\n" +
+                "          {\n" +
+                "                  \"vendorPackageCode\": \"" + vendorPackageCode + "-1\",\n" +
+                "                  \"statusText\": \"Parcel is out for delivery\",\n" +
+                "                  \"trackingId\": \"" + random_trackingID + "\",\n" +
+                "                  \"trackingLink\": \"\",\n" +
+                "                  \"shippingDate\": \"" + date + "\",\n" +
+                "                  \"expectedDelivery\": \"" + date + "\",\n" +
+                "                  \"status\": \"DELIVERED\",\n" +
+                "                  \"receiptDelivery\": \"" + date + "\"\n" +
+                "                }\n" +
+                "        ]\n" +
+                "        \n" +
+                "      }\n" +
+                "    ],    \n" +
+                "      \"shippingAddress\": {\n" +
+                "      \"countryIsoCode\": \"DE\",\n" +
+                "      \"type\": \"DEFAULT\"\n" +
+                "    },\n" +
+                "      \"vendorConsignmentCode\": \"" + vendorConsignmentCode + "\"\n" +
+                "  }\n";
+        Thread.sleep(1000);
+        swaggerPage.request_body.clear();
+        Thread.sleep(1000);
+        swaggerPage.request_body.sendKeys(delivered_body);
+        Thread.sleep(2000);
+        jsExecutor.executeScript("arguments[0].click();", swaggerPage.execute_btn);
+        wait.until(ExpectedConditions.visibilityOf(swaggerPage.response_status));
+        Assert.assertTrue(swaggerPage.response_status.getText().contains("201") ||
+                swaggerPage.response_status.getText().contains("200"));
+        emailPage.childWindowHandle();
+
+        Driver.getDriver().switchTo().newWindow(WindowType.TAB);
+        cronjob_ausführen_für_lieferung();
+        emailPage.parentWindowHandle();
+        //Driver.getDriver().switchTo().window("Swagger UI");
+        ///////////////////// Retoure inProgress
+
+        swaggerPage.bestellungen_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(swaggerPage.retouren_btn));
+        wait.until(ExpectedConditions.visibilityOf(swaggerPage.erzeugung_einerRücksendung_btn));
+        swaggerPage.erzeugung_einerRücksendung_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(swaggerPage.try_it_out_btn));
+        swaggerPage.try_it_out_btn.click();
+        LocalDateTime dateTime = LocalDateTime.now();
+        LocalDate date1 = LocalDate.now();                                                             //expectedDelivery date generiern
+
+        int random3 = (int) Math.floor(Math.random() * (max1 - min1 + 1) + min1);
+        Random random4 = new Random();
+        char randomchar1 = (char) (random4.nextInt(26) + 'A');
+        String rma = "" + randomchar1 + random3 + randomchar1;
+        String rücksendung_inProgressBody = "{\n" +
+                "  \"customerInfo\": {\n" +
+                "    \"address\": {\n" +
+                "      \"countryIsoCode\": \"DE\",\n" +
+                "      \"type\": \"PACKSTATION\"\n" +
+                "    },\n" +
+                "    \"emailAddress\": \"hd1-testuser@aldi-nord.de\"\n" +
+                "\n" +
+                "  },\n" +
+                "  \"entries\": [\n" +
+                "    {\n" +
+                "      \"notes\": \"TestaldiAykan\",\n" +
+                "      \"orderEntryNumber\": 1,\n" +
+                "      \"quantity\": 1,\n" +
+                "      \"reason\": \"DAMAGEDINTRANSIT\",\n" +
+                "      \"status\": \"IN_PROGRESS\"\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"initiationDate\": \"" + dateTime + "\",\n" +
+                "  \"orderCode\": \"" + orderCode + "\",\n" +
+                "  \"rma\": \"" + rma + "\"\n" +
+                "}";
+
+        swaggerPage.request_body.clear();
+        Thread.sleep(2000);
+        swaggerPage.request_body.sendKeys(rücksendung_inProgressBody);
+        swaggerPage.erzeugung_einerRücksendung_vendorCode_box.sendKeys(swaggerPage.vendorCode);
+        swaggerPage.execute_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(swaggerPage.response_status));
+        Assert.assertTrue(swaggerPage.response_status.getText().contains("201") ||
+                swaggerPage.response_status.getText().contains("200"));
+        String str = swaggerPage.rucksendung_entryCode.getText();
+        String str1 = swaggerPage.aldiReturnCode.getText();
+        String entryCode = str.substring(1, str.length() - 1);
+        String aldiReturnCode = str1.substring(1, str1.length() - 1);
+
+        //////////           Reciving setze
+        String consignmentCode = "" + randomchar1 + random2 + randomchar1;
+        swaggerPage.erzeugung_einerRücksendung_btn.click();
+        Thread.sleep(1000);
+        swaggerPage.aktualisierung_vonRücksendungen1.click();
+        wait.until(ExpectedConditions.visibilityOf(swaggerPage.try_it_out_btn));
+        swaggerPage.try_it_out_btn.click();
+        String rucksendung_receving_requesbody = "{\n" +
+                "  \"aldiReturnCode\": \"" + aldiReturnCode + "\",\n" +
+                "  \"customerInfo\": {\n" +
+                "    \"address\": {\n" +
+                "      \"countryIsoCode\": \"DE\",\n" +
+                "      \"firstName\": \"Test\",\n" +
+                "      \"lastName\": \"Test\",\n" +
+                "      \"packstationNumber\": \"string\",\n" +
+                "      \"postNumber\": \"string\",\n" +
+                "      \"postOfficeNumber\": \"string\",\n" +
+                "      \"postalCode\": \"45138\",\n" +
+                "      \"remarks\": \"string\",\n" +
+                "      \"salutationCode\": \"MR\",\n" +
+                "      \"streetName\": \"Huttrop\",\n" +
+                "      \"streetNumber\": \"60\",\n" +
+                "      \"town\": \"string\",\n" +
+                "      \"type\": \"PACKSTATION\"\n" +
+                "    },\n" +
+                "    \"emailAddress\": \"hd1-testuser@aldi-nord.de\",\n" +
+                "    \"phoneNumber\": \"string\"\n" +
+                "  },\n" +
+                "  \"entries\": [\n" +
+                "    {\n" +
+                "      \"consignments\": [\n" +
+                "        {\n" +
+                "          \"carrier\": \"DHL\",\n" +
+                "          \"consignmentCode\": \"" + consignmentCode + "\",\n" +
+                "          \"packages\": [\n" +
+                "            {\n" +
+                "              \"status\": \"RECEIVING\",\n" +
+                "              \"trackingId\": \"" + random_trackingID + "\",\n" +
+                "              \"trackingLink\": \"\",\n" +
+                "              \"vendorPackageCode\": \"" + vendorPackageCode + "-1\"\n" +
+                "            }\n" +
+                "          ],\n" +
+                "          \"quantity\": 1\n" +
+                "        }\n" +
+                "      ],\n" +
+                "      \"entryCode\": \"" + entryCode + "\",\n" +
+                "      \"notes\": \"string\",\n" +
+                "      \"orderEntryNumber\": 1,\n" +
+                "      \"quantity\": 1,\n" +
+                "      \"reason\": \"DAMAGEDINTRANSIT\"\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"initiationDate\": \"" + dateTime + "\",\n" +
+                "  \"orderCode\": \"" + orderCode + "\"\n" +
+                "}";
+        swaggerPage.request_body.clear();
+        swaggerPage.request_body.sendKeys(rucksendung_receving_requesbody);
+        Thread.sleep(2000);
+        swaggerPage.erzeugung_einerRücksendung_vendorCode_box.sendKeys(swaggerPage.vendorCode);
+        Thread.sleep(1000);
+        jsExecutor.executeScript("arguments[0].click();", swaggerPage.execute_btn);
+        wait.until(ExpectedConditions.visibilityOf(swaggerPage.response_status));
+        Thread.sleep(1000);
+        Assert.assertTrue(swaggerPage.response_status.getText().contains("201") ||
+                swaggerPage.response_status.getText().contains("200"));
+
+        //  ////////            Completed setzen
+
+        swaggerPage.clear_btn.click();
+        Thread.sleep(2000);
+        swaggerPage.request_body.clear();
+        Thread.sleep(2000);
+        String completed_body = "{\n" +
+                "  \"aldiReturnCode\": \"" + aldiReturnCode + "\",\n" +
+                "  \"customerInfo\": {\n" +
+                "    \"address\": {\n" +
+                "      \"countryIsoCode\": \"DE\",\n" +
+                "      \"type\": \"PACKSTATION\"\n" +
+                "    },\n" +
+                "    \"emailAddress\": \"hd1-testuser@aldi-nord.de\"\n" +
+                "  },\n" +
+                "  \"entries\": [\n" +
+                "    {\n" +
+                "      \"consignments\": [\n" +
+                "        {\n" +
+                "          \"carrier\": \"DHL\",\n" +
+                "          \"completedDate\": \"" + date1 + "\",\n" +
+                "          \"consignmentCode\": \"" + consignmentCode + "\",\n" +
+                "          \"packages\": [\n" +
+                "            {\n" +
+                "              \"receiptDelivery\": \"" + date1 + "\",\n" +
+                "              \"status\": \"COMPLETED\",\n" +
+                "              \"vendorPackageCode\": \"" + vendorPackageCode + "-1\"\n" +
+                "            }\n" +
+                "          ],\n" +
+                "          \"quantity\": 1\n" +
+                "        }\n" +
+                "      ],\n" +
+                "      \"entryCode\": \"" + entryCode + "\",\n" +
+                "      \"notes\": \"TestAldi\",\n" +
+                "      \"orderEntryNumber\": 1,\n" +
+                "      \"quantity\": 1,\n" +
+                "      \"reason\": \"DAMAGEDINTRANSIT\"\n" +
+                "    }\n" +
+                "  ],\n" +
+                "  \"initiationDate\": \"" + dateTime + "\",\n" +
+                "  \"orderCode\": \"" + orderCode + "\"\n" +
+                "}\n";
+
+        swaggerPage.request_body.sendKeys(completed_body);
+        Thread.sleep(2000);
+        swaggerPage.execute_btn.click();
+        wait.until(ExpectedConditions.visibilityOf(swaggerPage.response_status));
+        Assert.assertTrue(swaggerPage.response_status.getText().contains("201") ||
+                swaggerPage.response_status.getText().contains("200"));
+    }
+---------------------------------------------------------------------------------------------------------------------
+@Given("Ein Produkt stornieren")
+    public void ein_produkt_stornieren() throws UnsupportedEncodingException, InterruptedException {       //Erzeugung von Stornierung
+        Thread.sleep(6000);
+        tokenPage.accessToken();                            //     Token genieren
+        if (ConfigurationReader.getProperty("AEC_SHOP_URL").contains("https://www-aec-s1.preprod.an-cms.com/")) {
+            endpoint = "https://aldivendorwebservices.co6hnkccbu-aldiitpla2-s1-public.model-t.cc.commerce.ondemand.com/aldivendorwebservices/2.0/DE/vendor/";
+        } else {
+            endpoint = "https://aldivendorwebservices.co6hnkccbu-aldiitpla2-s2-public.model-t.cc.commerce.ondemand.com/aldivendorwebservices/2.0/DE/vendor/";
+        }
+        //      Abruf Einer Bestellung
+
+        Response response1 = given().auth().oauth2(tokenPage.token)
+                .accept(ContentType.JSON).
+                contentType(ContentType.JSON).when()
+                .get(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode);
+        Thread.sleep(4000);
+        // response1.prettyPrint();
+        Assert.assertTrue(response1.statusCode() == 200 || response1.statusCode() == 201);
+        String expected_orderCode = "[" + orderCode + "]";                                               //      Frontend Bestellnummer
+        JsonPath jsonPath = response1.jsonPath();
+        Assert.assertEquals("orderCode ist nicht identisch", expected_orderCode, jsonPath.get("orders.code").toString());  //Backend orderCode
+        //Stornierung  mit POST
+        Response response2 = given().auth().oauth2(tokenPage.token).accept(ContentType.JSON).contentType(ContentType.JSON).
+                body("[ { \"cancelQuantity\": 1, " +
+                        "\"cancelReason\": \"CARRIER_RETURN\", " +
+                        "\"notes\": \"string\", " +
+                        "\"orderEntryNumber\": 1, " +
+                        "\"updateStock\": true }]"
+                )
+                .when().post(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode + "/cancellations");
+        Assert.assertTrue(response2.statusCode() == 200 || response2.statusCode() == 201);                  // Statuscode überprüfen
+        // System.out.println("************************************************************************");
+        Response response3 = given().auth().oauth2(tokenPage.token)
+                .accept(ContentType.JSON).
+                contentType(ContentType.JSON).when()
+                .get(endpoint + ConfigurationReader.getProperty("AEC_VENDERCODE") + "/orders/" + orderCode);
+        Thread.sleep(3000);
+        //response3.prettyPrint();
+
+    }
+-----------------------------------------------------------------------------------------------------------------------------
+POSTMAN:
+READY_ORDER_NoPACKAGE
+[
+  {
+    "carrier": "DHL",
+    "entries": [
+      {
+        "orderEntryNumber": 1,
+        "quantity": 1
+      }
+    ],
+    "shippingAddress": {
+      "countryIsoCode": "DE",
+      "type": "DEFAULT"
+    },
+    "status": "READY",
+    "statusText": "READY",
+    "vendorConsignmentCode": "B01013392K43-1"
+  }
+]
+READY_ORDER_WithPACKAGE
+[
+  {
+    "carrier": "",
+    "entries": [
+      {
+        "orderEntryNumber": 1,
+          "quantity": 1,
+        "packageEntries": [
+          {
+            "status": "READY",
+            "statusText": "READY",
+            "vendorPackageCode": "B01022392M88"
+          }
+        ]
+      
+      }
+    ],
+      "shippingAddress": {
+      "countryIsoCode": "DE",
+      "type": "DEFAULT"
+    },
+      "vendorConsignmentCode": "B01022392M88-1"
+  }
+]
+
+SHIP_ORDER_NoPACKAGE
+[
+  {
+    "carrier": "DHL",
+    "entries": [
+      {
+        "orderEntryNumber": 1,
+        "quantity": 1
+      }
+    ],
+    "shippingAddress": {
+      "countryIsoCode": "DE",
+      "firstName": "string",
+      "lastName": "string",
+      "packstationNumber": "string",
+      "postNumber": "string",
+      "postOfficeNumber": "string",
+      "postalCode": "string",
+      "remarks": "string",
+      "salutationCode": "MR",
+      "streetName": "string",
+      "streetNumber": "string",
+      "town": "string",
+      "type": "DEFAULT"
+    },
+    "shippingDate": "2023-03-22",
+    "status": "SHIPPED",
+    "statusText": "versendet",
+    "trackingId": "324445982819",
+    "trackingLink": "https://trackingLink.de",
+    "vendorConsignmentCode": "B01013392K43-1"
+  }
+]
+
+
+SHIP_ORDER_WithPACKAGE
+[
+  {
+    "carrier": "",
+    "entries": [
+      {
+        "orderEntryNumber": 1,
+        "packageEntries": [
+          {
+            "shippingDate": "2022-11-16",
+            "status": "SHIPPED",
+            "statusText": "versendet",
+            "trackingId": "905684967312",
+            "trackingLink": "https://trackingLink.de",
+            "vendorPackageCode": "B01022392M88"
+          }
+          ],
+        "quantity": 1
+      }
+    ],
+      "shippingAddress": {
+      "countryIsoCode": "DE",
+      "firstName": "string",
+      "lastName": "string",
+      "packstationNumber": "string",
+      "postNumber": "string",
+      "postOfficeNumber": "string",
+      "postalCode": "string",
+      "remarks": "string",
+      "salutationCode": "MR",
+      "streetName": "string",
+      "streetNumber": "string",
+      "town": "string",
+      "type": "DEFAULT"
+    },
+      "vendorConsignmentCode": "B01022392M88-1"
+  }
+]
+
+DELIVERED_ORDER_NoPACKAGE
+[
+  {
+    "carrier": "DHL",
+    "entries": [
+      {
+        "orderEntryNumber": 1,
+        "quantity": 1
+      }
+    ],
+    "shippingAddress": {
+      "countryIsoCode": "DE",
+      "type": "DEFAULT"
+    },
+    "shippingDate": "2023-03-22",
+     "receiptDelivery": "2023-03-22",
+     "status": "DELIVERED",
+    "statusText": "versendet",
+    "trackingId": "324445982819",
+    "trackingLink": "https://trackingLink.de",
+    "vendorConsignmentCode": "B01013392K43-1"
+  }
+]
+
+DELIVERED_ORDER_WithPACKAGE
+[
+  {
+    "carrier": "DHL",
+    "entries": [
+      {
+        "orderEntryNumber": 1,
+        "quantity": 1,
+        "packageEntries": [
+          {
+                  "vendorPackageCode": "B01022391M70",
+                  "statusText": "Parcel is out for delivery",
+                  "trackingId": "01225040533502",
+                  "trackingLink": "https://tracking.dpd.de/parcelstatus?locale=en_EN&query=01225040533502",
+                  "shippingDate": "2022-01-10",
+                  "status": "DELIVERED",
+                  "receiptDelivery": "2022-01-13"
+                }
+        ]
+        
+      }
+    ],    
+      "shippingAddress": {
+      "countryIsoCode": "DE",
+      "type": "DEFAULT"
+    },
+      "vendorConsignmentCode": "7002117525-1-0"
+  }
+]
+CONSIGMENT_CANSEL
+{
+  "carrier": "DHL",
+  "entries": [
+    {
+      "orderEntryNumber": 1,
+      "quantity": 2
+    }
+  ],
+  "shippingAddress": {
+    "countryIsoCode": "DE",
+    "type": "DEFAULT"
+  },
+  "status": "CANCELLED",
+  "statusText": "string",
+  "trackingId": "394494928834",
+  "trackingLink": "https://trackingLink.de",
+  "vendorConsignmentCode": "B01018695M77-1"
+}
+
+RETOURE ERZEUGEN IN_PROGRESS
+{
+  "customerInfo": {
+    "address": {
+      "countryIsoCode": "DE",
+      "firstName": "string",
+      "lastName": "string",
+      "packstationNumber": "string",
+      "postNumber": "string",
+      "postOfficeNumber": "string",
+      "postalCode": "string",
+      "remarks": "string",
+      "salutationCode": "MR",
+      "streetName": "string",
+      "streetNumber": "string",
+      "town": "string",
+      "type": "DEFAULT"
+    },
+    "emailAddress": "hd1-testuser@aldi-nord.de"
+  },
+  "entries": [
+    {
+      "notes": "string",
+      "orderEntryNumber": 1,
+      "quantity": 1,
+      "reason": "DONTLIKEANYMORE",
+      "status": "IN_PROGRESS"
+    }
+  ],
+  "initiationDate": "2023-03-22T11:54:08.481Z",
+  "orderCode": "B01013590K01",
+  "rma": "3283562951660"
+}
+
+RETOURE RECEIVING
+{
+  "aldiReturnCode": "R01000794Z0K01",
+  "customerInfo": {
+    "address": {
+      "countryIsoCode": "DE",
+      "firstName": "Test",
+      "lastName": "Test",
+      "packstationNumber": "string",
+      "postNumber": "string",
+      "postOfficeNumber": "string",
+      "postalCode": "45138",
+      "remarks": "string",
+      "salutationCode": "MR",
+      "streetName": "Huttrop",
+      "streetNumber": "60",
+      "town": "string",
+      "type": "PACKSTATION"
+    },
+    "emailAddress": "hd1-testuser@aldi-nord.de",
+    "phoneNumber": "string"
+  },
+  "entries": [
+    {
+      "consignments": [
+        {
+          "carrier": "DHL",
+          "consignmentCode": "47856456029427",
+          "packages": [
+            {
+              "status": "RECEIVING",
+              "trackingId": "324445982819",
+              "trackingLink": "https://trackingLink.de",
+              "vendorPackageCode": "B01013590K01-1"
+            }
+          ],
+          "quantity": 1
+        }
+      ],
+      "entryCode": "8798517889028",
+      "notes": "string",
+      "orderEntryNumber": 1,
+      "quantity": 1,
+      "reason": "DAMAGEDINTRANSIT"
+    }
+  ],
+  "initiationDate": "2023-03-22T12:02:14.207Z",
+  "orderCode": "B01013590K01"
+}
+RECEIVED
+{
+  "aldiReturnCode": "R01000392Z0K02",
+  "customerInfo": {
+    "address": {
+      "countryIsoCode": "DE",
+      "firstName": "string",
+      "lastName": "string",
+      "packstationNumber": "string",
+      "postNumber": "string",
+      "postOfficeNumber": "string",
+      "postalCode": "string",
+      "remarks": "string",
+      "salutationCode": "MR",
+      "streetName": "string",
+      "streetNumber": "string",
+      "town": "string",
+      "type": "PACKSTATION"
+    },
+    "emailAddress": "hd-test@aldi-nord.de",
+    "phoneNumber": "string"
+  },
+  "entries": [
+    {
+      "consignments": [
+        {
+          "carrier": "DHL",
+          "consignmentCode": "RC01000390Z0K28",
+          "packages": [
+            {
+              "receiptDelivery": "2022-06-20",
+              "status": "RECEIVED",
+              "trackingId": "353794928834",
+              "trackingLink": "https://trackingLink.de",
+              "vendorPackageCode": "B01007290K61-1"
+            }
+          ],
+          "quantity": 1
+        }
+      ],
+      "entryCode": "8797141665796",
+      "notes": "string",
+      "orderEntryNumber": 1,
+      "quantity": 1,
+      "reason": "DAMAGEDINTRANSIT"
+    }
+  ],
+  "initiationDate": "2022-06-20T11:15:14.207Z",
+  "orderCode": "B01007290K61"
+}
+COMPLETED
+{
+  "aldiReturnCode": "R01000794Z0K01",
+  "customerInfo": {
+    "address": {
+      "countryIsoCode": "DE",
+      "firstName": "Test",
+      "lastName": "Test",
+      "packstationNumber": "string",
+      "postNumber": "string",
+      "postOfficeNumber": "string",
+      "postalCode": "45138",
+      "remarks": "string",
+      "salutationCode": "MR",
+      "streetName": "Huttrop",
+      "streetNumber": "60",
+      "town": "string",
+      "type": "PACKSTATION"
+    },
+    "emailAddress": "hd1-testuser@aldi-nord.de",
+    "phoneNumber": "string"
+  },
+  "entries": [
+    {
+      "consignments": [
+        {
+          "carrier": "DHL",
+          "consignmentCode": "47856456029427",
+          "packages": [
+            {
+              "completedDate": "2023-03-22",
+              "receiptDelivery": "2023-03-22",
+              "status": "COMPLETED",
+           
+              "vendorPackageCode": "B01013590K01-1"
+            
+            }
+          ],
+          "quantity": 1
+        }
+      ],
+      "entryCode": "8798517889028",
+      "notes": "string",
+      "orderEntryNumber": 1,
+      "quantity": 1,
+      "reason": "DAMAGEDINTRANSIT"
+    }
+  ],
+  "initiationDate": "2023-03-22T12:06:14.207Z",
+  "orderCode": "B01013590K01"
+}
+
+PARCELLAB_onDispatch: {{Server}}/cws/1.0/DE/parcellab/updateEvent
+{
+  "event": "onDispatch",
+  "eventid": "{{eventid}}",
+  "references": {
+    "courier": "{{courier}}",
+    "orderNo": "{{orderNo}}",
+    "tracking_number": "{{tracking_number}}",
+    "xid": "{{xid}}"
+  },
+  "timestamp": "2022-03-15T13:028:01.533Z"
+}
+
+onDelivered: {{Server}}/cws/1.0/DE/parcellab/updateEvent
+{
+  "event": "onDelivered",
+  "eventid": "{{eventid}}",
+  "references": {
+    "courier": "{{courier}}",
+    "orderNo": "{{orderNo}}",
+    "tracking_number": "{{tracking_number}}",
+    "xid": "{{xid}}"
+  },
+  "timestamp": "2022-03-15T13:028:01.533Z"
+}
+
+
+
+
+
+
+
+        
+        
+        
+        
+        
+        
+        
