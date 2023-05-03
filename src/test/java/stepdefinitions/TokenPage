@@ -1,0 +1,83 @@
+package pages.desktop;
+
+
+import org.apache.hc.client5.http.ClientProtocolException;
+import org.apache.hc.client5.http.classic.methods.HttpPost;
+import org.apache.hc.client5.http.entity.UrlEncodedFormEntity;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpClient;
+import org.apache.hc.client5.http.impl.classic.CloseableHttpResponse;
+import org.apache.hc.client5.http.impl.classic.HttpClients;
+import org.apache.hc.core5.http.NameValuePair;
+import org.apache.hc.core5.http.ParseException;
+import org.apache.hc.core5.http.io.entity.EntityUtils;
+import org.apache.hc.core5.http.message.BasicNameValuePair;
+import utilities.ConfigurationReader;
+
+import java.io.IOException;
+import java.io.UnsupportedEncodingException;
+import java.util.ArrayList;
+import java.util.List;
+
+public class TokenPage {
+
+    public static String token;
+    HttpPost post;
+
+    public void accessToken() throws UnsupportedEncodingException {
+
+        String tokenURL;
+        if (ConfigurationReader.getProperty("_SHOP_URL").contains("https://www-ac-s.preod.an-cms.com/")) {
+            tokenURL = "https://vendorwebservices.co6hnkccbu-itpla2-s1-public.model-t.cc.commerce.ondemand.com" +
+                    "/authorizationserver/oauth/token";
+        } else {
+            tokenURL = "https://vendorwebservices.co6hnkccbu-itpla2-s2-public.model-t.cc.commerce.ondemand.com/authorizationserver/oauth/token";
+
+        }
+
+        post = new HttpPost(tokenURL);
+
+
+        List<NameValuePair> urlParameters = new ArrayList<>();
+        switch (ConfigurationReader.getProperty("_VENDERCODE")) {
+            case "ionDE":
+                // add request parameter, form parameters
+
+                urlParameters.add(new BasicNameValuePair("username", "onDE"));
+                urlParameters.add(new BasicNameValuePair("password", "12"));
+                urlParameters.add(new BasicNameValuePair("scope", "basic"));
+                urlParameters.add(new BasicNameValuePair("client_id", "ionDE"));
+                urlParameters.add(new BasicNameValuePair("type", "request-body"));
+                urlParameters.add(new BasicNameValuePair("client_secret", "cret"));
+                urlParameters.add(new BasicNameValuePair("grant_type", "password"));
+                break;
+            case "tstDE":
+                urlParameters.add(new BasicNameValuePair("username", "DE"));
+                urlParameters.add(new BasicNameValuePair("password", "14"));
+                urlParameters.add(new BasicNameValuePair("scope", "basic"));
+                urlParameters.add(new BasicNameValuePair("client_id", "tDE"));
+                urlParameters.add(new BasicNameValuePair("type", "request-body"));
+                urlParameters.add(new BasicNameValuePair("client_secret", "scret"));
+                urlParameters.add(new BasicNameValuePair("grant_type", "password"));
+                break;
+
+        }
+
+        post.setEntity(new UrlEncodedFormEntity(urlParameters));
+
+        try (CloseableHttpClient httpClient = HttpClients.createDefault();
+             CloseableHttpResponse response = httpClient.execute(post)) {
+            String str = EntityUtils.toString(response.getEntity());
+            //System.out.println("Token  :   "+str.substring(22,49));
+            token = str.substring(22, 49);
+
+
+        } catch (ClientProtocolException e) {
+            e.printStackTrace();
+        } catch (IOException | ParseException e) {
+            e.printStackTrace();
+        }
+
+    }
+
+
+}
