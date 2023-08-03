@@ -1,0 +1,179 @@
+package utilities;
+
+import io.github.bonigarcia.wdm.WebDriverManager;
+import org.openqa.selenium.Dimension;
+import org.openqa.selenium.WebDriver;
+
+import org.openqa.selenium.chrome.ChromeDriver;
+import org.openqa.selenium.chrome.ChromeOptions;
+
+import java.io.File;
+import java.util.HashMap;
+import java.util.Map;
+
+public class Driver {
+
+	private Driver() {
+	}
+
+	static WebDriver driver;
+
+
+
+	public static WebDriver getDriver() {
+		if (driver == null) {
+			switch (ConfigurationReader.getProperty("cucumber.browser")) {
+			case "iPhoneX":
+	//System.setProperty("webdriver.chrome.driver","/home/azureuser/Driver/chromedriver/chromedriver");
+				WebDriverManager.chromedriver().setup();
+				Map<String, Object> deviceMetrics1 = new HashMap<>();
+				deviceMetrics1.put("width", 375);
+				deviceMetrics1.put("height", 812);
+				deviceMetrics1.put("pixelRatio", 3.0);
+				deviceMetrics1.put("deviceName", "iPhoneX");
+				Map<String, Object> deviceMobEmu1 = new HashMap<>();
+				deviceMobEmu1.put("deviceMetrics", deviceMetrics1);
+ChromeOptions options = new ChromeOptions().setExperimentalOption("mobileEmulation", deviceMobEmu1);
+				driver=new ChromeDriver(options);
+
+				break;
+			case "iPhoneX-headless":
+				Map<String, Object> metricsMobHeadLess = new HashMap<>();
+				metricsMobHeadLess.put("width", 375);
+				metricsMobHeadLess.put("height", 812);
+				metricsMobHeadLess.put("pixelRatio", 3.0);
+				metricsMobHeadLess.put("deviceName", "iPhoneX");
+
+				Map<String, Object> deviceMobHeadLessEmu1 = new HashMap<>();
+				deviceMobHeadLessEmu1.put("deviceMetrics", metricsMobHeadLess);
+				ChromeOptions optionsHeadless = new ChromeOptions();
+				optionsHeadless.setExperimentalOption("mobileEmulation", deviceMobHeadLessEmu1);
+				optionsHeadless.addArguments("--headless", "--disable-gpu", "--window-size=1920,1200","--ignore-certificate-errors", "--silent");
+				driver = new ChromeDriver(optionsHeadless);
+
+				break;
+			case "samsungGalaxyS10":
+				//WebDriverManager.chromedriver().setup();
+				System.setProperty("webdriver.chrome.driver","/home/azureuser/Driver/chromedriver/chromedriver");
+				Map<String, Object> deviceMetrics = new HashMap<>();
+				deviceMetrics.put("width", 360);
+				deviceMetrics.put("height", 740);
+				deviceMetrics.put("pixelRatio", 3.5);
+				deviceMetrics.put("deviceName", "Samsung Galaxy S10");
+				Map<String, Object> deviceMobEmu2 = new HashMap<>();
+				deviceMobEmu2.put("deviceMetrics", deviceMetrics);
+				driver = new ChromeDriver(new ChromeOptions().setExperimentalOption("mobileEmulation", deviceMobEmu2));
+				break;
+			case "samsungGalaxyS10-headless":
+				Map<String, Object> metricsHLAS10 = new HashMap<>();
+				metricsHLAS10.put("width", 360);
+				metricsHLAS10.put("height", 740);
+				metricsHLAS10.put("pixelRatio", 3.5);
+				metricsHLAS10.put("deviceName", "Samsung Galaxy S10");
+				Map<String, Object> deviceHLAS10Emu = new HashMap<>();
+				deviceHLAS10Emu.put("deviceMetrics", metricsHLAS10);
+				
+				ChromeOptions optionsHLAS10 = new ChromeOptions();
+				optionsHLAS10.setExperimentalOption("mobileEmulation", deviceHLAS10Emu);
+				optionsHLAS10.addArguments("--headless", "--disable-gpu", "--window-size=1920,1200","--ignore-certificate-errors", "--silent");
+				driver = new ChromeDriver(optionsHLAS10);
+				break;
+			case "iPhone11":
+				//WebDriverManager.chromedriver().setup();
+				System.setProperty("webdriver.chrome.driver","/home/azureuser/Driver/chromedriver/chromedriver");
+				Map<String, Object> deviceMetrics3 = new HashMap<>();
+				deviceMetrics3.put("width", 414);
+				deviceMetrics3.put("height", 896);
+				deviceMetrics3.put("pixelRatio", 2);
+				deviceMetrics3.put("deviceName", "iPhone 11");
+				Map<String, Object> deviceMobEmu3 = new HashMap<>();
+				deviceMobEmu3.put("deviceMetrics", deviceMetrics3);
+				driver = new ChromeDriver(new ChromeOptions().setExperimentalOption("mobileEmulation", deviceMobEmu3));
+				break;
+			case "iPhone11-headless":
+				Map<String, Object> metricsHLI11 = new HashMap<>();
+				metricsHLI11.put("width", 414);
+				metricsHLI11.put("height", 896);
+				metricsHLI11.put("pixelRatio", 2);
+				metricsHLI11.put("deviceName", "iPhone 11");
+				Map<String, Object> deviceHLI11Emu = new HashMap<>();
+				deviceHLI11Emu.put("deviceMetrics", metricsHLI11);
+				
+				ChromeOptions optionsHLI11= new ChromeOptions();
+				optionsHLI11.setExperimentalOption("mobileEmulation", deviceHLI11Emu);
+				optionsHLI11.addArguments("--headless", "--disable-gpu", "--window-size=1920,1200","--ignore-certificate-errors", "--silent");
+				driver = new ChromeDriver(optionsHLI11);
+				break;
+			case "samsungGalaxyA51":
+				//WebDriverManager.chromedriver().setup();
+				System.setProperty("webdriver.chrome.driver","/home/azureuser/Driver/chromedriver/chromedriver");
+				Map<String, Object> deviceMetrics4 = new HashMap<>();
+				deviceMetrics4.put("width", 412);
+				deviceMetrics4.put("height", 914);
+				deviceMetrics4.put("pixelRatio", 2.6);
+				deviceMetrics4.put("deviceName", "Samsung Galaxy A51");
+				Map<String, Object> deviceMobEmu4 = new HashMap<>();
+				deviceMobEmu4.put("deviceMetrics", deviceMetrics4);
+				driver = new ChromeDriver(new ChromeOptions().setExperimentalOption("mobileEmulation", deviceMobEmu4));
+				break;
+			case "samsungGalaxyA51-headless":
+				Map<String, Object> metricsHLA51 = new HashMap<>();
+				metricsHLA51.put("width", 412);
+				metricsHLA51.put("height", 914);
+				metricsHLA51.put("pixelRatio", 2.6);
+				metricsHLA51.put("deviceName", "Samsung Galaxy A51");
+				Map<String, Object> deviceHLA51Emu = new HashMap<>();
+				deviceHLA51Emu.put("deviceMetrics", metricsHLA51);
+				
+				ChromeOptions optionsHLA51 = new ChromeOptions();
+				optionsHLA51.setExperimentalOption("mobileEmulation", deviceHLA51Emu);
+				optionsHLA51.addArguments("--headless", "--disable-gpu", "--window-size=1920,1200","--ignore-certificate-errors", "--silent");
+				driver = new ChromeDriver(optionsHLA51);
+				break;
+			case "huaweiP30Pro":
+				//WebDriverManager.chromedriver().setup();
+				System.setProperty("webdriver.chrome.driver","/home/azureuser/Driver/chromedriver/chromedriver");
+				Map<String, Object> deviceMetrics5 = new HashMap<>();
+				deviceMetrics5.put("width", 392);
+				deviceMetrics5.put("height", 800);
+				deviceMetrics5.put("pixelRatio", 3);
+				deviceMetrics5.put("deviceName", "Huawei P30 Pr0");
+				Map<String, Object> deviceMobEmu5 = new HashMap<>();
+				deviceMobEmu5.put("deviceMetrics", deviceMetrics5);
+				driver = new ChromeDriver(new ChromeOptions().setExperimentalOption("mobileEmulation", deviceMobEmu5));
+				break;
+			case "huaweiP30Pro-headless":
+				Map<String, Object> metricsHLP30 = new HashMap<>();
+				metricsHLP30.put("width", 392);
+				metricsHLP30.put("height", 800);
+				metricsHLP30.put("pixelRatio", 3);
+				metricsHLP30.put("deviceName", "Huawei P30 Pr0");
+				Map<String, Object> deviceHLP30Emu = new HashMap<>();
+				deviceHLP30Emu.put("deviceMetrics", metricsHLP30);
+				
+				ChromeOptions optionsHLP30 = new ChromeOptions();
+				optionsHLP30.setExperimentalOption("mobileEmulation", deviceHLP30Emu);
+				optionsHLP30.addArguments("--headless", "--disable-gpu", "--window-size=1920,1200","--ignore-certificate-errors", "--silent");
+				driver = new ChromeDriver(optionsHLP30);
+				break;
+			}
+			
+		}
+		//driver.manage().window().maximize();
+		//driver.manage().deleteAllCookies();
+		//driver.manage().timeouts().implicitlyWait(10, TimeUnit.SECONDS);
+		return driver;
+
+	}
+
+
+	public static void closeDriver() {
+		if (driver != null) {
+
+			//driver.manage().deleteAllCookies(); //delete all cookies
+			driver.quit();
+
+			driver = null;
+		}
+	}
+}
