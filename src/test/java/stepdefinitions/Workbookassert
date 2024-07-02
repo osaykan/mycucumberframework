@@ -1,0 +1,173 @@
+package rzp.operation.wch.kit.assertion;
+
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.util.CellAddress;
+import org.apache.poi.ss.util.CellReference;
+import org.assertj.core.api.AbstractAssert;
+import org.assertj.core.api.AssertionErrorCollector;
+import org.assertj.core.api.SoftAssertions;
+
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+import java.util.stream.Collectors;
+
+import static org.apache.poi.ss.usermodel.CellType.BLANK;
+
+/**
+ * <p>Custom assertions for comparing the contents of an Excel workbook to a reference one.
+ * This will only compare the string-content of each cell ignoring the formatting and data-types.
+ * </p>
+ *
+ * <p>Example:</p>
+ * <pre><code>
+ * try (var actualWorkbook = WorkbookFactory.create(new File("actual.xlsx"));
+ *      var expectedWorkbook = WorkbookFactory.create(new File("expected.xlsx"))
+ * ) {
+ *     assertThatWorkbook(actualWorkbook)
+ *         .ignoringFields("C1", "C2", "C3")
+ *         .hasSameContentAs(expectedWorkbook);
+ * }</code></pre>
+ */
+public class WorkbookAssert extends AbstractAssert<WorkbookAssert, Workbook> {
+
+    private final Set<CellAddress> ignoredFields = new HashSet<>();
+
+    public WorkbookAssert(Workbook actualWorkbook) {
+        super(actualWorkbook, WorkbookAssert.class);
+    }
+
+    public static WorkbookAssert assertThatWorkbook(Workbook actual) {
+        return new WorkbookAssert(actual);
+    }
+
+    public WorkbookAssert hasSameContentAs(Workbook expected) {
+        compareSheets(expected);
+        return this;
+    }
+
+    /**
+     * Ignore fields in comparison using Excel style A1, C27 style cell references
+     *
+     * @param fields Fields to be ignored
+     * @return current assertion instance for chaining
+     */
+    public WorkbookAssert ignoringCells(List<String> fields) {
+        this.ignoredFields.addAll(fields.stream()
+                                          .map(CellAddress::new)
+                                          .collect(Collectors.toSet()));
+        return this;
+    }
+
+    private void compareSheets(Workbook expected) {
+        if (expected.getNumberOfSheets() != actual.getNumberOfSheets()) {
+            failWithMessage("Expected %d sheets in workbook, found %d instead", expected.getNumberOfSheets(),
+                            actual.getNumberOfSheets());
+        }
+
+        // Compare sheet names
+        for (int i = 0; i < expected.getNumberOfSheets(); i++) {
+            var expectedSheet = expected.getSheetAt(i);
+            var actualSheet = actual.getSheetAt(i);
+            if (!expectedSheet.getSheetName().equals(actualSheet.getSheetName())) {
+                failWithMessage("Expected sheet number %d to have name \"%s\" but found \"%s\" instead", i + 1,
+                                expectedSheet.getSheetName(), actualSheet.getSheetName());
+            }
+        }
+
+        var sheetResults = new SoftAssertions();
+        for (int i = 0; i < expected.getNumberOfSheets(); i++) {
+            var sheetResult = compareSheetContents(expected.getSheetAt(i), actual.getSheetAt(i));
+            sheetResults.assertAlso(sheetResult);
+        }
+        sheetResults.assertAll();
+    }
+
+    /**
+     * Compare contents of two workbook sheets. Only compares string-based content and no formatting, etc.
+     *
+     * @param expectedSheet The Excel sheet that is expected
+     * @param actualSheet The Excel sheet that was created
+     */
+    private AssertionErrorCollector compareSheetContents(Sheet expectedSheet, Sheet actualSheet) {
+        var rowsSoftAssertions = new SoftAssertions();
+        for (int i = expectedSheet.getFirstRowNum(); i <= expectedSheet.getLastRowNum(); i++) {
+            Row expectedRow = expectedSheet.getRow(i);
+            Row actualRow = actualSheet.getRow(i);
+            if (isEmpty(expectedRow) && isEmpty(actualRow)) {
+                // skip rows that are empty in both sheets
+                continue;
+            }
+            if (isEmpty(actualRow)) {
+                rowsSoftAssertions.fail("Expected sheet \"%s\" to contain a row number %d", actualSheet.getSheetName(),
+                                expectedRow.getRowNum() + 1);
+                continue;
+            }
+            AssertionErrorCollector rowResult = compareRows(expectedRow, actualRow);
+            rowsSoftAssertions.assertAlso(rowResult);
+        }
+        return rowsSoftAssertions;
+    }
+
+    private AssertionErrorCollector compareRows(Row expectedRow, Row actualRow) {
+        String sheetName = expectedRow.getSheet().getSheetName();
+
+        // collect all cell value differences to get a better overview
+        var softAssertCellValues = new SoftAssertions();
+        if (expectedRow.getFirstCellNum() == -1) {
+            if (actualRow.getFirstCellNum() != -1) {
+                softAssertCellValues.fail("Expected row %d of sheet %s to be empty but its not".formatted(expectedRow.getRowNum(),
+                                                                                                sheetName));
+                return softAssertCellValues;
+            } else {
+                // Nothing to compare if both rows contain no cells
+                return softAssertCellValues;
+            }
+        }
+
+        for (int i = expectedRow.getFirstCellNum(); i <= expectedRow.getLastCellNum(); i++) {
+            var expectedCell = expectedRow.getCell(i);
+            var actualCell = actualRow.getCell(i);
+            if (isEmpty(expectedCell) && isEmpty(actualCell)) {
+                // skip cells that are empty in both sheets
+                continue;
+            }
+            if (ignoredFields.contains(new CellAddress(new CellReference(expectedRow.getRowNum(), i)))) {
+                continue;
+            }
+            var actualCellValue = getCellValue(actualCell);
+            String cellAddress = actualCell.getAddress().formatAsString();
+            if (isEmpty(expectedCell)) {
+                softAssertCellValues.fail("Expected cell %s to be empty, but contains value '%s'",
+                                          cellAddress, actualCellValue);
+                continue;
+            }
+
+            softAssertCellValues.assertThat(actualCellValue)
+                    .as("Expected cell %s of sheet \"%s\" to contain same value as reference", cellAddress, sheetName)
+                    .isEqualTo(getCellValue(expectedCell));
+        }
+        return softAssertCellValues;
+    }
+
+    private Object getCellValue(Cell cell) {
+        return switch (cell.getCellType()) {
+            case NUMERIC -> cell.getNumericCellValue();
+            case BOOLEAN -> cell.getBooleanCellValue();
+            default -> cell.getStringCellValue();
+        };
+    }
+
+    private Boolean isEmpty(Cell cell) {
+        return cell == null
+                || cell.getCellType().equals(BLANK)
+                || "".equals(getCellValue(cell));
+    }
+
+    private boolean isEmpty(Row row) {
+        return row == null || row.getFirstCellNum() == -1;
+    }
+}
