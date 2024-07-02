@@ -1,0 +1,312 @@
+package rzp.operation.wch.kit.steps;
+
+import io.cucumber.datatable.DataTable;
+import io.cucumber.java.de.Dann;
+import io.cucumber.java.de.Wenn;
+import lombok.RequiredArgsConstructor;
+import lombok.experimental.FieldDefaults;
+import lombok.extern.slf4j.Slf4j;
+import net.schmizz.sshj.sftp.RemoteResourceInfo;
+import org.apache.commons.lang3.StringUtils;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.junit.jupiter.api.AfterEach;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.client.HttpClientErrorException;
+import rzp.operation.wch.fachklassenmodell.Zahlweise;
+import rzp.operation.wch.kit.comparator.RedsuxComparator;
+import rzp.operation.wch.kit.service.SftpService;
+import rzp.operation.wch.sst.anliegenuebergabe.client.ExportApi;
+import rzp.operation.wch.sst.anliegenuebergabe.model.ExportResponse;
+
+import java.io.IOException;
+import java.io.InputStream;
+import java.util.Arrays;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.Set;
+
+import static java.lang.String.format;
+import static java.time.Duration.ofSeconds;
+import static java.util.Collections.emptyList;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Fail.fail;
+import static org.awaitility.Awaitility.await;
+import static rzp.operation.wch.kit.assertion.WorkbookAssert.assertThatWorkbook;
+import static rzp.operation.wch.kit.steps.StepUtilities.getDataFile;
+
+/**
+ * Implementierung von REDSUX Export steps
+ */
+@Slf4j
+@RequiredArgsConstructor
+@FieldDefaults(makeFinal = true)
+public class RedsuxExportSteps {
+
+    ExportApi exportApi;
+    SftpService sftpService;
+    Character COMPARATOR_IGNORE_CHAR = '*';
+    Map<String, ExportResponse> bucketExportResponseMap = new HashMap<>();
+    static Integer exportResponseStatusCode;
+
+    /**
+     * A list of remote SFTP files that should be removed after each test run
+     */
+    Set<String> remoteFilesToDelete = new HashSet<>();
+
+    @AfterEach
+    void teardown() {
+        remoteFilesToDelete.forEach(remoteFilePath -> {
+            try {
+                sftpService.removeFile(remoteFilePath);
+            } catch (IOException e) {
+                log.error("Could not delete remote file {}", remoteFilePath, e);
+            }
+        });
+    }
+
+    /**
+     * Call the REST endpoint that triggers the async REDSUX export for the given bucket
+     */
+    @Wenn("Der Export-Trigger für das Bucket {string} wurde ausgeführt")
+    public void exportTriggerFuerDasBucketWurdeAusgefuehrt(String bucket) {
+        var response = exportApi.triggerExportWithHttpInfo(bucket, false);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        var body = response.getBody();
+        String filename = Objects.requireNonNull(body).getRedsuxFilename();
+        String exportId = body.getExportJobId();
+        log.info("Export Trigger Info ExportId:{} filename:{}", exportId, filename);
+        bucketExportResponseMap.put(bucket, body);
+    }
+
+    @Wenn("der Export-Trigger für den EZ Bucket {string} für freigegebene und im Status ROUTING_ERMITTELT befindliche Anliegen ausgeführt wurde")
+    public void triggerExportIncludingNonApprovedAnliegenForEZBucket(String bucket) {
+        var response = exportApi.triggerExportWithHttpInfo(bucket, true);
+        assertThat(response.getStatusCode()).isEqualTo(HttpStatus.CREATED);
+        var body = response.getBody();
+        String filename = Objects.requireNonNull(body).getRedsuxFilename();
+        String exportId = body.getExportJobId();
+        log.info("Export including non-approved Anliegen for EZ Bucket Trigger Info ExportId:{} filename:{}", exportId, filename);
+        bucketExportResponseMap.put(bucket, body);
+    }
+
+    @Wenn("die Ausführung des Export-Triggers für den Nicht-EZ Bucket {string} für freigegebene und im Status ROUTING_ERMITTELT befindliche Anliegen zu einem Fehler führt")
+    public void triggerExportIncludingNonApprovedAnliegenForNonEZBucket(String bucket) {
+        try {
+            var response = exportApi.triggerExportWithHttpInfo(bucket, true);
+        } catch (HttpClientErrorException e) {
+            var statusCode = e.getStatusCode().value();
+            log.info("Export including non-approved Anliegen for Non-EZ Bucket causes error with status:{}", statusCode);
+            exportResponseStatusCode = statusCode;
+        }
+    }
+
+    @Dann("liefert der Export-Trigger für das Bucket {string} den Status {int}")
+    public void exportTriggerLiefertErwartetenStatusZurueck(String bucket, Integer expectedStatusCode) {
+        Integer statusCode;
+        try {
+            var response = exportApi.triggerExportWithHttpInfo(bucket, true);
+            statusCode = response.getStatusCode().value();
+        } catch (HttpClientErrorException e) {
+            statusCode = e.getStatusCode().value();
+        }
+        assertThat(statusCode)
+                .describedAs("Rest-Trigger Response Status-Code ist %s", expectedStatusCode)
+                .isEqualTo(expectedStatusCode);
+    }
+
+    @Dann("befindet sich die Trigger Datei im Bucket-Verzeichnis {string}")
+    public void exportCreatesTriggerFileCorrectly(String bucket) {
+        String triggerFileName = bucketExportResponseMap.get(bucket).getTriggerFilename();
+        var remoteBucketPath = sftpService.getBucketPath(bucket);
+        String filePath = getPath(remoteBucketPath, triggerFileName);
+        await().atMost(ofSeconds(60)).untilAsserted(() -> {
+            try {
+                getRemoteFile(filePath).close();
+            } catch (IOException e) {
+                fail(format("Trigger File:%s for bucket:%s was not created", filePath, bucket));
+            }
+        });
+        assertThat(triggerFileName).as("Dateiname der Trigger-Datei entspricht dem vorgegebenem Muster")
+                .matches("(WCH.(EZ|EZ_S|AVN|AVN_S|AVR|AVR_S|MV|MV_S|SV|SV_S|SV_EZ|SV_EZ_S).\\d{4}-\\d{2}-\\d{2}T\\d{2}-\\d{2}-\\d{2}).trigger");
+    }
+
+    @Dann("ist der Dateiname der REDSUX-Datei für das {string} korrekt")
+    public void redsuxFileHasTheCorrectNamePattern(String bucket) {
+        String fileName = bucketExportResponseMap.get(bucket).getRedsuxFilename();
+        var remoteBucketPath = sftpService.getBucketPath(bucket);
+        String filePath = getPath(remoteBucketPath, fileName);
+        await().atMost(ofSeconds(60)).untilAsserted(() -> {
+            try {
+                getRemoteFile(filePath).close();
+            } catch (IOException e) {
+                fail(format("Redsux File:%s for bucket:%s was not created", filePath, bucket));
+            }
+        });
+        assertThat(fileName).as("Dateiname der REDSUX-Datei entspricht dem vorgegebenem Muster")
+                .matches("([VX]).WCH.(EZ|AVN|AVR|MV).\\d{4}-\\d{2}-\\d{2}T\\d{2}-\\d{2}-\\d{2}.UX");
+    }
+
+    /**
+     * Assert that the export directory on the SFTP server for the given bucket contains
+     * the correct file that matches the content of the local reference file.
+     */
+    @Dann("Der exportierte REDSUX befindet sich im Bucket-Verzeichnis {string} mit dem selben Inhalt wie die Referenz-REDSUX {string}")
+    public void befindetSichImBucketVerzeichnisDerExportierteRedsux(String bucket, String referenceRedsux)
+            throws IOException {
+        String filename = bucketExportResponseMap.get(bucket).getRedsuxFilename();
+        var remoteBucketPath = sftpService.getBucketPath(bucket);
+        String filePath = getPath(remoteBucketPath, filename);
+        awaitSftpFileExists(remoteBucketPath, filename);
+        // assert the REDSUX content is the same
+        RedsuxComparator redsuxComparator = new RedsuxComparator(COMPARATOR_IGNORE_CHAR);
+        try (InputStream inputStream = getRemoteFile(filePath)) {
+            redsuxComparator.compareTwoFiles(inputStream, getDataFile(referenceRedsux));
+        }
+    }
+
+    /**
+     * Assert that the latest Redsux file exported to the directory on the SFTP server for the given bucket contains
+     * the expected Satzarten (in new version) ignoring the "ignore char"
+     */
+    @Dann("befindet sich eine REDSUX Datei im Bucket-Verzeichnis {string} und die Satzarten entsprechen der folgenden Tabelle")
+    public void befindetSichEineREDSUXDateiImBucketVerzeichnisUndDieSatzartenEntsprechenDerFolgendenTabelle(
+            String bucket, DataTable expectedData) throws IOException {
+        compareRedsux(bucket, expectedData, false);
+    }
+
+    @Dann("befindet sich eine REDSUX Datei mit mehreren Einträgen im Bucket-Verzeichnis {string} und die Satzarten entsprechen der folgenden Tabelle")
+    public void befindetSichEineREDSUXDateiMitMehrerenEintraegenImBucketVerzeichnisUndDieSatzartenEntsprechenDerFolgendenTabelle(
+            String bucket, DataTable expectedData) throws IOException {
+        compareRedsuxWithSeveralEntries(bucket, expectedData, false);
+    }
+
+    /**
+     * Assert that the latest Redsux file exported to the directory on the SFTP server for the given bucket contains
+     * the expected Satzarten (in old version) ignoring the "ignore char"
+     */
+    @Dann("befindet sich eine alte REDSUX Datei im Bucket-Verzeichnis {string} und die Satzarten entsprechen der folgenden Tabelle")
+    public void befindetSichEineNeueREDSUXDateiImBucketVerzeichnisUndDieSatzartenEntsprechenDerFolgendenTabelle(
+            String bucket, DataTable expectedData) throws IOException {
+        compareRedsux(bucket, expectedData, true);
+    }
+
+    private void compareRedsux(String bucket, DataTable expectedData, boolean alteVersion) throws IOException {
+        List<Map<String, String>> expectedDataList = expectedData.asMaps(String.class, String.class);
+        Map<String, String> expectedSzatMap = new HashMap<>();
+        for (Map<String, String> szatMap : expectedDataList) {
+            expectedSzatMap.put(szatMap.get("szatId"), StringUtils.strip(szatMap.get("expectedValue"), "\""));
+        }
+        var remoteBucketPath = sftpService.getBucketPath(bucket);
+        String filename = bucketExportResponseMap.get(bucket).getRedsuxFilename();
+        awaitSftpFileExists(remoteBucketPath, filename);
+        String filePath = getPath(remoteBucketPath, filename);
+        RedsuxComparator redsuxComparator = new RedsuxComparator(COMPARATOR_IGNORE_CHAR);
+        try (InputStream inputStream = getRemoteFile(filePath)) {
+            redsuxComparator.checkSzats(expectedSzatMap, inputStream, alteVersion);
+        }
+    }
+
+    private void compareRedsuxWithSeveralEntries(String bucket, DataTable expectedData, boolean alteVersion) throws IOException {
+        List<List<String>> expectedDataList = expectedData.asLists(String.class);
+
+        var remoteBucketPath = sftpService.getBucketPath(bucket);
+        String filename = bucketExportResponseMap.get(bucket).getRedsuxFilename();
+        awaitSftpFileExists(remoteBucketPath, filename);
+        String filePath = getPath(remoteBucketPath, filename);
+        RedsuxComparator redsuxComparator = new RedsuxComparator(COMPARATOR_IGNORE_CHAR);
+
+        try (InputStream inputStream = getRemoteFile(filePath)) {
+            redsuxComparator.checkSzats(expectedDataList, inputStream, alteVersion);
+        }
+    }
+
+    @Dann("befindet sich eine REDSUX Datei im Bucket-Verzeichnis {string} und enthält ausschließlich folgende Satzarten {string}")
+    public void befindetSichEineREDSUXDateiImBucketVerzeichnisUndEnthaeltAusschliesslichFolgendeSatzarten(String bucket,
+                                                                                                          String expectedSzats)
+            throws IOException {
+        var remoteBucketPath = sftpService.getBucketPath(bucket);
+        String filename = bucketExportResponseMap.get(bucket).getRedsuxFilename();
+        awaitSftpFileExists(remoteBucketPath, filename);
+        String filePath = getPath(remoteBucketPath, filename);
+        RedsuxComparator redsuxComparator = new RedsuxComparator();
+        try (InputStream inputStream = getRemoteFile(filePath)) {
+            redsuxComparator.checkSzatCompleteness(Arrays.asList(expectedSzats.split(",", -1)), inputStream);
+        }
+    }
+
+    @Dann("befindet sich die exportierte Adressprüfliste im Bucket-Verzeichnis {word} mit der Zahlweise {zahlweise} mit dem gleichen Inhalt wie die Referenzdatei {word}")
+    public void compareAdressprueflisten(String bucket, Zahlweise zahlweise, String referenceExcel) {
+        var remoteBucketPath = sftpService.getBucketPath(bucket);
+        String filename = switch (zahlweise) {
+            case BAR -> bucketExportResponseMap.get(bucket).getAdressprueflisteBarFilename();
+            case UNBAR -> bucketExportResponseMap.get(bucket).getAdressprueflisteUnbarFilename();
+        };
+        String filePath = getPath(remoteBucketPath, filename);
+        awaitSftpFileExists(remoteBucketPath, filename);
+        // M1 always contains the timestamp which will differ
+        compareExcelFiles(referenceExcel, filePath, List.of("N1"));
+    }
+
+    @Dann("befindet sich das exportierte Stückzahlenprotokoll im Bucket-Verzeichnis {word} mit dem gleichen Inhalt wie die Referenzdatei {word}")
+    public void compareStueckzahlenprotokoll(String bucket, String referenceExcel) {
+        var remoteBucketPath = sftpService.getBucketPath(bucket);
+        var filename = bucketExportResponseMap.get(bucket).getStueckzahlenprotokollFilename();
+        String filePath = getPath(remoteBucketPath, filename);
+        awaitSftpFileExists(remoteBucketPath, filename);
+        compareExcelFiles(referenceExcel, filePath, emptyList());
+    }
+
+    @Dann("befinden sich keine Export-Dateien im Bucket-Verzeichnis {string}")
+    public void checkEmptyBucketDirectory(String bucketName) {
+        var remoteBucketPath = sftpService.getBucketPath(bucketName);
+        await().atMost(ofSeconds(30)).untilAsserted(() -> assertThat(sftpService.listFiles(remoteBucketPath))
+                .as("No File %s exists on SFTP server in directory %s", remoteBucketPath)
+                .isEmpty());
+    }
+
+    @Dann("enthält die Antwort der zuvor aufgerufenen Export API den Status {int}")
+    public void zuvorAusgefuehrterExportEnthaeltErwartetenAntwortStatusCode(Integer expectedStatusCode) {
+        assertThat(exportResponseStatusCode)
+                .describedAs("Rest-Trigger Response Status-Code ist %s", expectedStatusCode)
+                .isEqualTo(expectedStatusCode);
+    }
+
+    private void awaitSftpFileExists(String path, String filename) throws AssertionError {
+        await().atMost(ofSeconds(30)).untilAsserted(() -> assertThat(sftpService.listFiles(path))
+                .as("File %s exists on SFTP server in directory %s".formatted(filename, path))
+                .extracting(RemoteResourceInfo::getName)
+                .contains(filename));
+    }
+
+    private InputStream getRemoteFile(String filePath) {
+        try {
+            InputStream inputStream = sftpService.getInputStream(filePath);
+            remoteFilesToDelete.add(filePath);
+            return inputStream;
+        } catch (IOException e) {
+            throw new AssertionError(format("Error occurred during get File from %s", filePath), e);
+        }
+    }
+
+    private void compareExcelFiles(String localFilename, String remoteFilePath, List<String> ignoreCells) {
+        try (Workbook actualWorkbook = WorkbookFactory.create(getRemoteFile(remoteFilePath));
+             Workbook expectedWorkbook = WorkbookFactory.create(getDataFile(localFilename))
+        ) {
+            assertThatWorkbook(actualWorkbook)
+                    .ignoringCells(ignoreCells)
+                    .hasSameContentAs(expectedWorkbook);
+        } catch (IOException e) {
+            throw new AssertionError(
+                    format("Comparing the local Excel file %s to the remote file %s failed: %s", localFilename,
+                           remoteFilePath, e.getMessage()), e);
+        }
+    }
+
+    private String getPath(String remoteBucketPath, String filename) {
+        return remoteBucketPath + "/" + filename;
+    }
+}
