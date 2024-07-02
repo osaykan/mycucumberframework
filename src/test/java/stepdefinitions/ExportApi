@@ -1,0 +1,178 @@
+//
+// Source code recreated from a .class file by IntelliJ IDEA
+// (powered by FernFlower decompiler)
+//
+
+package rzp.operation.wch.sst.anliegenuebergabe.client;
+
+import java.util.Collections;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Locale;
+import java.util.Map;
+import java.util.Set;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.util.LinkedMultiValueMap;
+import org.springframework.util.MultiValueMap;
+import org.springframework.web.client.HttpClientErrorException;
+import org.springframework.web.client.RestClientException;
+import rzp.operation.wch.sst.anliegenuebergabe.ApiClient;
+import rzp.operation.wch.sst.anliegenuebergabe.ApiClient.CollectionFormat;
+import rzp.operation.wch.sst.anliegenuebergabe.model.ExportJobDTO;
+import rzp.operation.wch.sst.anliegenuebergabe.model.ExportJobStatusEnum;
+import rzp.operation.wch.sst.anliegenuebergabe.model.ExportJobSummaryDTO;
+import rzp.operation.wch.sst.anliegenuebergabe.model.ExportResponse;
+
+public class ExportApi {
+    private ApiClient apiClient;
+
+    public ExportApi() {
+        this(new ApiClient());
+    }
+
+    public ExportApi(ApiClient apiClient) {
+        this.apiClient = apiClient;
+    }
+
+    public ApiClient getApiClient() {
+        return this.apiClient;
+    }
+
+    public void setApiClient(ApiClient apiClient) {
+        this.apiClient = apiClient;
+    }
+
+    public void abortJob(String id) throws RestClientException {
+        this.abortJobWithHttpInfo(id);
+    }
+
+    public ResponseEntity<Void> abortJobWithHttpInfo(String id) throws RestClientException {
+        Object localVarPostBody = null;
+        if (id == null) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Missing the required parameter 'id' when calling abortJob");
+        } else {
+            Map<String, Object> uriVariables = new HashMap();
+            uriVariables.put("id", id);
+            MultiValueMap<String, String> localVarQueryParams = new LinkedMultiValueMap();
+            HttpHeaders localVarHeaderParams = new HttpHeaders();
+            MultiValueMap<String, String> localVarCookieParams = new LinkedMultiValueMap();
+            MultiValueMap<String, Object> localVarFormParams = new LinkedMultiValueMap();
+            String[] localVarAccepts = new String[0];
+            List<MediaType> localVarAccept = this.apiClient.selectHeaderAccept(localVarAccepts);
+            String[] localVarContentTypes = new String[0];
+            MediaType localVarContentType = this.apiClient.selectHeaderContentType(localVarContentTypes);
+            String[] localVarAuthNames = new String[]{"basic-auth"};
+            ParameterizedTypeReference<Void> localReturnType = new ParameterizedTypeReference<Void>() {
+            };
+            return this.apiClient.invokeAPI("/admin/jobs/{id}", HttpMethod.DELETE, uriVariables, localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
+        }
+    }
+
+    public ExportJobDTO getJob(String id) throws RestClientException {
+        return (ExportJobDTO)this.getJobWithHttpInfo(id).getBody();
+    }
+
+    public ResponseEntity<ExportJobDTO> getJobWithHttpInfo(String id) throws RestClientException {
+        Object localVarPostBody = null;
+        if (id == null) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Missing the required parameter 'id' when calling getJob");
+        } else {
+            Map<String, Object> uriVariables = new HashMap();
+            uriVariables.put("id", id);
+            MultiValueMap<String, String> localVarQueryParams = new LinkedMultiValueMap();
+            HttpHeaders localVarHeaderParams = new HttpHeaders();
+            MultiValueMap<String, String> localVarCookieParams = new LinkedMultiValueMap();
+            MultiValueMap<String, Object> localVarFormParams = new LinkedMultiValueMap();
+            String[] localVarAccepts = new String[]{"application/json"};
+            List<MediaType> localVarAccept = this.apiClient.selectHeaderAccept(localVarAccepts);
+            String[] localVarContentTypes = new String[0];
+            MediaType localVarContentType = this.apiClient.selectHeaderContentType(localVarContentTypes);
+            String[] localVarAuthNames = new String[]{"basic-auth"};
+            ParameterizedTypeReference<ExportJobDTO> localReturnType = new ParameterizedTypeReference<ExportJobDTO>() {
+            };
+            return this.apiClient.invokeAPI("/jobs/{id}", HttpMethod.GET, uriVariables, localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
+        }
+    }
+
+    public List<ExportJobSummaryDTO> getJobs(String name, Set<ExportJobStatusEnum> status, Integer offset, Integer limit, List<String> sort) throws RestClientException {
+        return (List)this.getJobsWithHttpInfo(name, status, offset, limit, sort).getBody();
+    }
+
+    public ResponseEntity<List<ExportJobSummaryDTO>> getJobsWithHttpInfo(String name, Set<ExportJobStatusEnum> status, Integer offset, Integer limit, List<String> sort) throws RestClientException {
+        Object localVarPostBody = null;
+        MultiValueMap<String, String> localVarQueryParams = new LinkedMultiValueMap();
+        HttpHeaders localVarHeaderParams = new HttpHeaders();
+        MultiValueMap<String, String> localVarCookieParams = new LinkedMultiValueMap();
+        MultiValueMap<String, Object> localVarFormParams = new LinkedMultiValueMap();
+        localVarQueryParams.putAll(this.apiClient.parameterToMultiValueMap((ApiClient.CollectionFormat)null, "name", name));
+        localVarQueryParams.putAll(this.apiClient.parameterToMultiValueMap(CollectionFormat.valueOf("multi".toUpperCase(Locale.ROOT)), "status", status));
+        localVarQueryParams.putAll(this.apiClient.parameterToMultiValueMap((ApiClient.CollectionFormat)null, "offset", offset));
+        localVarQueryParams.putAll(this.apiClient.parameterToMultiValueMap((ApiClient.CollectionFormat)null, "limit", limit));
+        localVarQueryParams.putAll(this.apiClient.parameterToMultiValueMap(CollectionFormat.valueOf("multi".toUpperCase(Locale.ROOT)), "sort", sort));
+        String[] localVarAccepts = new String[]{"application/json"};
+        List<MediaType> localVarAccept = this.apiClient.selectHeaderAccept(localVarAccepts);
+        String[] localVarContentTypes = new String[0];
+        MediaType localVarContentType = this.apiClient.selectHeaderContentType(localVarContentTypes);
+        String[] localVarAuthNames = new String[]{"basic-auth"};
+        ParameterizedTypeReference<List<ExportJobSummaryDTO>> localReturnType = new ParameterizedTypeReference<List<ExportJobSummaryDTO>>() {
+        };
+        return this.apiClient.invokeAPI("/jobs", HttpMethod.GET, Collections.emptyMap(), localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
+    }
+
+    public ExportResponse restartJob(String id) throws RestClientException {
+        return (ExportResponse)this.restartJobWithHttpInfo(id).getBody();
+    }
+
+    public ResponseEntity<ExportResponse> restartJobWithHttpInfo(String id) throws RestClientException {
+        Object localVarPostBody = null;
+        if (id == null) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Missing the required parameter 'id' when calling restartJob");
+        } else {
+            Map<String, Object> uriVariables = new HashMap();
+            uriVariables.put("id", id);
+            MultiValueMap<String, String> localVarQueryParams = new LinkedMultiValueMap();
+            HttpHeaders localVarHeaderParams = new HttpHeaders();
+            MultiValueMap<String, String> localVarCookieParams = new LinkedMultiValueMap();
+            MultiValueMap<String, Object> localVarFormParams = new LinkedMultiValueMap();
+            String[] localVarAccepts = new String[]{"application/json"};
+            List<MediaType> localVarAccept = this.apiClient.selectHeaderAccept(localVarAccepts);
+            String[] localVarContentTypes = new String[0];
+            MediaType localVarContentType = this.apiClient.selectHeaderContentType(localVarContentTypes);
+            String[] localVarAuthNames = new String[]{"basic-auth"};
+            ParameterizedTypeReference<ExportResponse> localReturnType = new ParameterizedTypeReference<ExportResponse>() {
+            };
+            return this.apiClient.invokeAPI("/admin/jobs/{id}", HttpMethod.PUT, uriVariables, localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
+        }
+    }
+
+    public ExportResponse triggerExport(String name, Boolean includeNonApprovedAnliegen) throws RestClientException {
+        return (ExportResponse)this.triggerExportWithHttpInfo(name, includeNonApprovedAnliegen).getBody();
+    }
+
+    public ResponseEntity<ExportResponse> triggerExportWithHttpInfo(String name, Boolean includeNonApprovedAnliegen) throws RestClientException {
+        Object localVarPostBody = null;
+        if (name == null) {
+            throw new HttpClientErrorException(HttpStatus.BAD_REQUEST, "Missing the required parameter 'name' when calling triggerExport");
+        } else {
+            MultiValueMap<String, String> localVarQueryParams = new LinkedMultiValueMap();
+            HttpHeaders localVarHeaderParams = new HttpHeaders();
+            MultiValueMap<String, String> localVarCookieParams = new LinkedMultiValueMap();
+            MultiValueMap<String, Object> localVarFormParams = new LinkedMultiValueMap();
+            localVarQueryParams.putAll(this.apiClient.parameterToMultiValueMap((ApiClient.CollectionFormat)null, "name", name));
+            localVarQueryParams.putAll(this.apiClient.parameterToMultiValueMap((ApiClient.CollectionFormat)null, "include-non-approved-anliegen", includeNonApprovedAnliegen));
+            String[] localVarAccepts = new String[]{"application/json", "application/problem+json"};
+            List<MediaType> localVarAccept = this.apiClient.selectHeaderAccept(localVarAccepts);
+            String[] localVarContentTypes = new String[0];
+            MediaType localVarContentType = this.apiClient.selectHeaderContentType(localVarContentTypes);
+            String[] localVarAuthNames = new String[]{"basic-auth"};
+            ParameterizedTypeReference<ExportResponse> localReturnType = new ParameterizedTypeReference<ExportResponse>() {
+            };
+            return this.apiClient.invokeAPI("/export", HttpMethod.POST, Collections.emptyMap(), localVarQueryParams, localVarPostBody, localVarHeaderParams, localVarCookieParams, localVarFormParams, localVarAccept, localVarContentType, localVarAuthNames, localReturnType);
+        }
+    }
+}
